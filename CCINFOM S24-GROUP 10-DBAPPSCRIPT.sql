@@ -4,8 +4,8 @@
 -- DBAPPSCRIPT.sql
 -- ==========================================
 
-CREATE DATABASE IF NOT EXISTS ITServicesDB;
-USE ITServicesDB;
+CREATE DATABASE IF NOT EXISTS ITServices;
+USE ITServices;
 
 -- ===========================
 -- CLIENT TABLE
