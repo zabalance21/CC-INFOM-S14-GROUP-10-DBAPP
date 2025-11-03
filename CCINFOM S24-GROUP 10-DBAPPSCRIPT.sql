@@ -38,7 +38,7 @@ CREATE TABLE Branch (
     branchId VARCHAR(20) PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     address VARCHAR(200),
-    region VARCHAR(50),
+    city VARCHAR(50),
     contactNumber VARCHAR(20),
     status ENUM('Operational', 'Closed') DEFAULT 'Operational'
 );
@@ -121,9 +121,9 @@ CREATE TABLE Payment (
 -- ===========================
 
 -- Branches
-INSERT INTO Branch (branchId, name, address, region, contactNumber, status) VALUES
-('BR-001','Main Office','123 Main St','Metro Manila','09171234567','Operational'),
-('BR-002','North Branch','456 North Ave','Metro Manila','09179876543','Operational');
+INSERT INTO Branch (branchId, name, address, city, contactNumber, status) VALUES
+('BR-001','Main Office','123 Main St','Manila','09171234567','Operational'),
+('BR-002','North Branch','456 North Ave','Makaki','09179876543','Operational');
 
 -- Account Managers
 INSERT INTO AccountManager (managerId, name, position, contactInfo, branchId, employment_status) VALUES
