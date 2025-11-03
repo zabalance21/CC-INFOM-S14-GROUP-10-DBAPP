@@ -9,6 +9,7 @@ public class Client {
     private String email;
     private String phone;
     private String address;
+    private ClientStatus status;
     private static final Random random = new Random();
     private static int counter = 3;
     private static final int MAX_CLIENTS = 1000;
@@ -20,6 +21,7 @@ public class Client {
         setEmail(email);
         setPhone(phone);
         setAddress(address);
+        status = ClientStatus.ACTIVE;
     }
 
     // For reading from DB (use existing ID)
@@ -57,6 +59,10 @@ public class Client {
         this.name =name;
     }
 
+    public void setStatus(){
+        this.status = ClientStatus.INACTIVE;
+    }
+
     public void setPhone(String phone) {
         if(phone == null || !phone.matches("^09\\d{9}$")) {
             throw new IllegalArgumentException("Invalid phone format. Phone number must be 11 digits and starts with 09.");
@@ -91,6 +97,9 @@ public class Client {
     }
     public String getAddress() {
         return this.address;
+    }
+    public ClientStatus getStatus() {
+        return this.status;
     }
     public String toString() {
         return String.format("Client ID: %s | Client Name: %s | Email: %s | Phone: %s | Address: %s\n", this.clientId, this.name, this.email, this.phone, this.address);
