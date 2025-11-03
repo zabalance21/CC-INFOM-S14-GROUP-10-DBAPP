@@ -94,6 +94,7 @@ CREATE TABLE Invoice (
     invoiceDate DATE,
     dueDate DATE,
     amount DECIMAL(10,2),
+    lateFee DECIMAL(10,2) DEFAULT 0.00,
     status ENUM('Unpaid','Paid','Overdue','Cancelled') DEFAULT 'Unpaid',
     FOREIGN KEY (contractId) REFERENCES Contract(contractId),
     FOREIGN KEY (clientId) REFERENCES Client(clientId)
