@@ -51,7 +51,6 @@ CREATE TABLE Branch (
 CREATE TABLE AccountManager (
     managerId VARCHAR(20) PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
-    position VARCHAR(50),
     contactInfo VARCHAR(100),
     branchId VARCHAR(20),
     employment_status ENUM('Active', 'Resigned') DEFAULT 'Active',
@@ -128,9 +127,9 @@ INSERT INTO Branch (branchId, name, address, city, contactNumber, status) VALUES
 ('BR-002','North Branch','456 North Ave','Makaki','09179876543','Operational');
 
 -- Account Managers
-INSERT INTO AccountManager (managerId, name, position, contactInfo, branchId, employment_status) VALUES
-('AM-001','John Calvara','Manager','john.calvara@example.com','BR-001','Active'),
-('AM-002','Kyle Escario','Manager','kyle.escario@example.com','BR-002','Active');
+INSERT INTO AccountManager (managerId, name, contactInfo, branchId, employment_status) VALUES
+('AM-001','John Calvara','john.calvara@example.com','BR-001','Active'),
+('AM-002','Kyle Escario','kyle.escario@example.com','BR-002','Active');
 
 -- Clients
 INSERT INTO Client (clientId, name, email, phone, address, status) VALUES
