@@ -23,7 +23,7 @@ public class ClientView {
             System.out.println("[4] Update Client");
             System.out.println("[5] Delete Client");
             System.out.println("[6] View Related Records (Contracts/Invoices)");
-            System.out.println("[0] Exit");
+            System.out.println("[0] Back");
             System.out.println("Enter your choice: ");
             choice = Integer.parseInt(scanner.nextLine());
 
@@ -34,7 +34,8 @@ public class ClientView {
                 case 4: updateClient(); break;
                 case 5: deleteClient(); break;
                 case 6: viewRelatedRecords(); break;
-                case 0: System.out.println("Exiting client menu.");
+                case 0:
+                    break;
                 default: System.out.println("Invalid choice. Try again.");
             }
         }while(choice != 0);
