@@ -30,7 +30,7 @@ CREATE TABLE Service (
     description TEXT,
     rate DECIMAL(10,2),
     category VARCHAR(50),
-    availability ENUM('Available', 'Unavailable', 'Discontinued') DEFAULT 'Available'
+    availability ENUM('Available', 'Discontinued') DEFAULT 'Available'
 );
 
 -- ===========================
@@ -54,7 +54,7 @@ CREATE TABLE AccountManager (
     position VARCHAR(50),
     contactInfo VARCHAR(100),
     branchId VARCHAR(20),
-    employment_status ENUM('Active', 'Inactive', 'Resigned') DEFAULT 'Active',
+    employment_status ENUM('Active', 'Resigned') DEFAULT 'Active',
     FOREIGN KEY (branchId) REFERENCES Branch(branchId)
 );
 
