@@ -29,7 +29,6 @@ CREATE TABLE Service (
     name VARCHAR(100) NOT NULL,
     description TEXT,
     rate DECIMAL(10,2),
-    category VARCHAR(50),
     availability ENUM('Available', 'Unavailable', 'Discontinued') DEFAULT 'Available'
 );
 
@@ -68,7 +67,6 @@ CREATE TABLE Contract (
     branchId VARCHAR(20),
     startDate DATE,
     endDate DATE,
-    terms TEXT,
     contract_status ENUM('Active', 'Expired', 'Closed') DEFAULT 'Active',
     FOREIGN KEY (clientId) REFERENCES Client(clientId),
     FOREIGN KEY (managerId) REFERENCES AccountManager(managerId),
@@ -138,15 +136,15 @@ INSERT INTO Client (clientId, name, email, phone, address, status) VALUES
 ('CL-002','Maxi Tatum','maxiT@yahoo.com','09170002222','202 Street B','Active');
 
 -- Services
-INSERT INTO Service (serviceId, name, description, rate, category, availability) VALUES
-('SV-001','Web Development','Building responsive websites',50000,'Development','Available'),
-('SV-002','Network Setup','Configure office network',20000,'IT Support','Available'),
-('SV-003','Software Maintenance','Ongoing software support',15000,'Maintenance','Available');
+INSERT INTO Service (serviceId, name, description, rate,availability) VALUES
+('SV-001','Web Development','Building responsive websites',50000,'Available'),
+('SV-002','Network Setup','Configure office network',20000,'Available'),
+('SV-003','Software Maintenance','Ongoing software support',15000,'Available');
 
 -- Contracts
-INSERT INTO Contract (contractId, clientId, managerId, branchId, startDate, endDate, terms, contract_status) VALUES
-('CT-001','CL-001','AM-001','BR-001','2025-09-01','2026-08-31','Annual web development project','Active'),
-('CT-002','CL-002','AM-002','BR-002','2025-10-01','2026-09-30','Quarterly IT support','Active');
+INSERT INTO Contract (contractId, clientId, managerId, branchId, startDate, endDate,contract_status) VALUES
+('CT-001','CL-001','AM-001','BR-001','2025-09-01','2026-08-31','Active'),
+('CT-002','CL-002','AM-002','BR-002','2025-10-01','2026-09-30','Active');
 
 -- Contract Services
 INSERT INTO ContractService (contractId, serviceId) VALUES
