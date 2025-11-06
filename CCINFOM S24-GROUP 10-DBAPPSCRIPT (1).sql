@@ -122,8 +122,8 @@ CREATE TABLE Payment (
 
 -- Branches
 INSERT INTO Branch (branchId, name, address, city, contactNumber, status) VALUES
-('BR-001','Main Office','123 Main St','Manila','09171234567','Operational'),
-('BR-002','North Branch','456 North Ave','Makaki','09179876543','Operational');
+('BR-001','Main Manila Office','123 Main St','Manila','09171234567','Operational'),
+('BR-002','Makati Branch','456 North Ave','Makaki','09179876543','Operational');
 
 -- Account Managers
 INSERT INTO AccountManager (managerId, name, position, contactInfo, branchId, employment_status) VALUES
