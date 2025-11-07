@@ -110,9 +110,7 @@ CREATE TABLE Payment (
     clientId VARCHAR(20),
     paymentDate DATE,
     amount DECIMAL(10,2),
-    method VARCHAR(50),
     referenceNumber VARCHAR(50),
-    payment_status ENUM('Valid','Refunded','Pending') DEFAULT 'Valid',
     FOREIGN KEY (invoiceId) REFERENCES Invoice(invoiceId),
     FOREIGN KEY (clientId) REFERENCES Client(clientId)
 );
@@ -159,5 +157,5 @@ INSERT INTO Invoice (invoiceId, contractId, clientId, invoiceDate, dueDate, amou
 ('INV-002','CT-002','CL-002','2025-10-15','2025-10-30',20000,'Unpaid');
 
 -- Payments
-INSERT INTO Payment (paymentId, invoiceId, clientId, paymentDate, amount, method, referenceNumber, payment_status) VALUES
-('PM-001','INV-001','CL-001','2025-09-20',65000,'Bank Transfer','REF-001','Valid');
+INSERT INTO Payment (paymentId, invoiceId, clientId, paymentDate, amount, referenceNumber) VALUES
+('PM-001','INV-001','CL-001','2025-09-20',65000,'REF-001');
