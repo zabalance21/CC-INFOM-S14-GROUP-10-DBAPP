@@ -67,7 +67,7 @@ CREATE TABLE Contract (
     branchId VARCHAR(20),
     startDate DATE,
     endDate DATE,
-    contract_status ENUM('Active', 'Expired', 'Closed') DEFAULT 'Active',
+    contract_status ENUM('Active', 'Closed') DEFAULT 'Active',
     FOREIGN KEY (clientId) REFERENCES Client(clientId),
     FOREIGN KEY (managerId) REFERENCES AccountManager(managerId),
     FOREIGN KEY (branchId) REFERENCES Branch(branchId)
@@ -79,6 +79,7 @@ CREATE TABLE Contract (
 CREATE TABLE ContractService (
     contractId VARCHAR(20),
     serviceId VARCHAR(20),
+    status ENUM('Active', 'Inactive') DEFAULT 'Active',
     PRIMARY KEY (contractId, serviceId),
     FOREIGN KEY (contractId) REFERENCES Contract(contractId),
     FOREIGN KEY (serviceId) REFERENCES Service(serviceId)
@@ -148,9 +149,9 @@ INSERT INTO Contract (contractId, clientId, managerId, branchId, startDate, endD
 
 -- Contract Services
 INSERT INTO ContractService (contractId, serviceId) VALUES
-('CT-001','SV-001'),
-('CT-001','SV-003'),
-('CT-002','SV-002');
+('CT-001','SV-001', 'Active'),
+('CT-001','SV-003', 'Active'),
+('CT-002','SV-002', 'Active');
 
 -- Invoices
 INSERT INTO Invoice (invoiceId, contractId, clientId, invoiceDate, dueDate, amount, status) VALUES
