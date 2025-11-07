@@ -50,7 +50,6 @@ CREATE TABLE Branch (
 CREATE TABLE AccountManager (
     managerId VARCHAR(20) PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
-    position VARCHAR(50),
     contactInfo VARCHAR(100),
     branchId VARCHAR(20),
     employment_status ENUM('Active', 'Inactive', 'Resigned') DEFAULT 'Active',
@@ -110,7 +109,9 @@ CREATE TABLE Payment (
     clientId VARCHAR(20),
     paymentDate DATE,
     amount DECIMAL(10,2),
+    method VARCHAR(50),
     referenceNumber VARCHAR(50),
+    payment_status ENUM('Valid','Refunded','Pending') DEFAULT 'Valid',
     FOREIGN KEY (invoiceId) REFERENCES Invoice(invoiceId),
     FOREIGN KEY (clientId) REFERENCES Client(clientId)
 );
@@ -125,9 +126,9 @@ INSERT INTO Branch (branchId, name, address, city, contactNumber, status) VALUES
 ('BR-002','Makati Branch','456 North Ave','Makaki','09179876543','Operational');
 
 -- Account Managers
-INSERT INTO AccountManager (managerId, name, position, contactInfo, branchId, employment_status) VALUES
-('AM-001','John Calvara','Manager','john.calvara@example.com','BR-001','Active'),
-('AM-002','Kyle Escario','Manager','kyle.escario@example.com','BR-002','Active');
+INSERT INTO AccountManager (managerId, name,contactInfo, branchId, employment_status) VALUES
+('AM-001','John Calvara','john.calvara@example.com','BR-001','Active'),
+('AM-002','Kyle Escario','kyle.escario@example.com','BR-002','Active');
 
 -- Clients
 INSERT INTO Client (clientId, name, email, phone, address, status) VALUES
@@ -146,7 +147,7 @@ INSERT INTO Contract (contractId, clientId, managerId, branchId, startDate, endD
 ('CT-002','CL-002','AM-002','BR-002','2025-10-01','2026-09-30','Active');
 
 -- Contract Services
-INSERT INTO ContractService (contractId, serviceId) VALUES
+INSERT INTO ContractService (contractId, serviceId, status) VALUES
 ('CT-001','SV-001', 'Active'),
 ('CT-001','SV-003', 'Active'),
 ('CT-002','SV-002', 'Active');
@@ -157,5 +158,5 @@ INSERT INTO Invoice (invoiceId, contractId, clientId, invoiceDate, dueDate, amou
 ('INV-002','CT-002','CL-002','2025-10-15','2025-10-30',20000,'Unpaid');
 
 -- Payments
-INSERT INTO Payment (paymentId, invoiceId, clientId, paymentDate, amount, referenceNumber) VALUES
-('PM-001','INV-001','CL-001','2025-09-20',65000,'REF-001');
+INSERT INTO Payment (paymentId, invoiceId, clientId, paymentDate, amount, method, referenceNumber, payment_status) VALUES
+('PM-001','INV-001','CL-001','2025-09-20',65000,'Bank Transfer','REF-001','Valid');
