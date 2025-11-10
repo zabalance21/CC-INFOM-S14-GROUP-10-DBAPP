@@ -22,6 +22,13 @@ public class ClientController {
         return clientDAO.getClientByID(id);
     }
 
+    //Gets a list of all clients
+    //Added for the GUI
+    public List<Client> getAllClients(){
+        List<Client> clients = clientDAO.getAllClients();
+        return clients;
+    }
+
     // Update an existing client
     public void updateExistingClient(Client client){
         clientDAO.updateClient(client);
