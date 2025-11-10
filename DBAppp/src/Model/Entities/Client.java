@@ -1,8 +1,5 @@
 package Model.Entities;
 
-import java.util.ArrayList;
-import java.util.Random;
-
 public class Client {
     private String clientId;
     private String name;
@@ -10,11 +7,8 @@ public class Client {
     private String phone;
     private String address;
     private ClientStatus status;
-    private static final Random random = new Random();
     private static int counter = 3;
     private static final int MAX_CLIENTS = 1000;
-    private final ArrayList<String> generatedIDs = new ArrayList<>();
-
     public Client(String name, String email, String phone, String address) {
         setClientId();
         setName(name);
@@ -59,8 +53,8 @@ public class Client {
         this.name =name;
     }
 
-    public void setStatus(){
-        this.status = ClientStatus.INACTIVE;
+    public void setStatus(ClientStatus status){
+        this.status = status;
     }
 
     public void setPhone(String phone) {

@@ -10,7 +10,7 @@ public class ClientDAO {  // FOR SQL CLIENT TABLE QUERIES
 
     // CREATE
     public void addClient(Client client){
-        String sql = "INSERT INTO Client (clientID, name, email, phone, address, status) VALUES (?,?,?,?,?)";
+        String sql = "INSERT INTO Client (clientID, name, email, phone, address, status) VALUES (?,?,?,?,?,?)";
         try(Connection conn = DBConnection.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)){
             stmt.setString(1, client.getClientId());
             stmt.setString(2, client.getName());
@@ -37,7 +37,7 @@ public class ClientDAO {  // FOR SQL CLIENT TABLE QUERIES
                         rs.getString("email"),
                         rs.getString("phone"),
                         rs.getString("address"));
-                        ClientStatus.valueOf(rs.getString("status"));
+                        client.setStatus(ClientStatus.valueOf(rs.getString("status")));
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -60,6 +60,7 @@ public class ClientDAO {  // FOR SQL CLIENT TABLE QUERIES
                         rs.getString("email"),
                         rs.getString("phone"),
                         rs.getString("address"));
+                client.setStatus(ClientStatus.valueOf(rs.getString("status")));
                 clients.add(client);
             }
         } catch (SQLException e) {
