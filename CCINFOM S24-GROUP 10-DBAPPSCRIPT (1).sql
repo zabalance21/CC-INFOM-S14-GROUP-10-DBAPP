@@ -76,10 +76,10 @@ CREATE TABLE Contract (
 -- CONTRACT SERVICE TABLE
 -- ===========================
 CREATE TABLE ContractService (
+	csId VARCHAR(20) PRIMARY KEY,
     contractId VARCHAR(20),
     serviceId VARCHAR(20),
     status ENUM('Active', 'Inactive') DEFAULT 'Active',
-    PRIMARY KEY (contractId, serviceId),
     FOREIGN KEY (contractId) REFERENCES Contract(contractId),
     FOREIGN KEY (serviceId) REFERENCES Service(serviceId)
 );
@@ -109,7 +109,6 @@ CREATE TABLE Payment (
     clientId VARCHAR(20),
     paymentDate DATE,
     amount DECIMAL(10,2),
-    method VARCHAR(50),
     referenceNumber VARCHAR(50),
     payment_status ENUM('Valid','Refunded','Pending') DEFAULT 'Valid',
     FOREIGN KEY (invoiceId) REFERENCES Invoice(invoiceId),
@@ -147,10 +146,10 @@ INSERT INTO Contract (contractId, clientId, managerId, branchId, startDate, endD
 ('CT-002','CL-002','AM-002','BR-002','2025-10-01','2026-09-30','Active');
 
 -- Contract Services
-INSERT INTO ContractService (contractId, serviceId, status) VALUES
-('CT-001','SV-001', 'Active'),
-('CT-001','SV-003', 'Active'),
-('CT-002','SV-002', 'Active');
+INSERT INTO ContractService (csId, contractId, serviceId, status) VALUES
+('CS-001','CT-001','SV-001', 'Active'),
+('CS-002','CT-001','SV-003', 'Active'),
+('CS-003','CT-002','SV-002', 'Active');
 
 -- Invoices
 INSERT INTO Invoice (invoiceId, contractId, clientId, invoiceDate, dueDate, amount, status) VALUES
@@ -158,5 +157,5 @@ INSERT INTO Invoice (invoiceId, contractId, clientId, invoiceDate, dueDate, amou
 ('INV-002','CT-002','CL-002','2025-10-15','2025-10-30',20000,'Unpaid');
 
 -- Payments
-INSERT INTO Payment (paymentId, invoiceId, clientId, paymentDate, amount, method, referenceNumber, payment_status) VALUES
-('PM-001','INV-001','CL-001','2025-09-20',65000,'Bank Transfer','REF-001','Valid');
+INSERT INTO Payment (paymentId, invoiceId, clientId, paymentDate, amount,referenceNumber, payment_status) VALUES
+('PM-001','INV-001','CL-001','2025-09-20',65000,'REF-001','Valid');
