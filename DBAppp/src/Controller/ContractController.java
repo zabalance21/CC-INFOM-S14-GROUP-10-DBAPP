@@ -2,11 +2,8 @@ package Controller;
 
 import Model.Entities.*;
 import Model.DAO.*;
-import View.InputHelper;
-
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 
 public class ContractController {
@@ -38,6 +35,11 @@ public class ContractController {
     // Retrieve a contract by ID
     public Contract getContractByID(String id) {
         return contractDAO.getContractByID(id);
+    }
+
+    //Retrieve all contracts for a specific client
+    public List<Contract> getContractByClientID(String ID){
+        return contractDAO.getContractsByClientId(ID);
     }
 
     // Update an existing contract
