@@ -90,4 +90,15 @@ public class ClientController {
     public List<ClientHistory> getClientHistory(String clientID) {
         return clientDAO.getClientHistory(clientID);
     }
+
+    public Client getClientByInvoice(Invoice invoice){
+        List<Client> clients = getAllClients();
+        for(Client client : clients){
+            List<Invoice> clientInvoices = invoiceDAO.getInvoicesByClientID(client.getClientId());
+            if(clientInvoices.contains(invoice)){
+                return client;
+            }
+        }
+        return null;
+    }
 }

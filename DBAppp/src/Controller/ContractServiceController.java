@@ -73,4 +73,38 @@ public class ContractServiceController {
         // Return a result object containing both old & new data for display
         return new ContractRenewalResult(oldStart, oldEnd, oldStatus, contract.getStartDate(), contract.getEndDate(), contract.getContractStatus());
     }
+
+    public ContractRenewalResult renewContract(String clientID, String contractServiceId){
+        Client client = clientDAO.getClientByID(clientID);
+        if (client == null) {
+            return null;
+        }
+
+        ContractService cs = contractServiceDao.getContractServiceById(contractServiceId);
+        if (cs == null) {
+            return null;
+        }
+        
+        Contract contract = contractServiceDao.getContractByContractServiceId(contractServiceId);
+        Service service = serviceDAO.getServiceById(cs.getServiceID());
+
+        if (contract == null) {
+            return null;
+        }
+
+        LocalDate oldStart = contract.getStartDate();
+        LocalDate oldEnd = contract.getEndDate();
+        ContractStatus oldStatus = ContractStatus.CLOSED;
+
+        contract.setStartDate(LocalDate.now());
+        contract.setEndDate(LocalDate.now().plusYears(1));
+        contract.setContractStatus(ContractStatus.ACTIVE);
+        contractDAO.updateContractDetails(contract);
+        Invoice invoice = new Invoice(contract.getContractID(), LocalDate.now(), LocalDate.now().plusYears(1), service.getRate());
+
+        contractServiceDao.reactivateContractServices(contractServiceId);
+        invoiceDAO.addInvoice(invoice);
+
+        return new ContractRenewalResult(oldStart, oldEnd, oldStatus, contract.getStartDate(), contract.getEndDate(), contract.getContractStatus());
+    }
 }

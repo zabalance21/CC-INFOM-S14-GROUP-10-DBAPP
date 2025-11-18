@@ -84,4 +84,11 @@ public class PaymentController {
         return paymentDAO.getQuarterlyRevenuePerService();
     }
 
+    public BigDecimal getMonthlyRevenue(){
+        return paymentDAO.getMonthlyRevenue();
+    }
+    public BigDecimal getMonthlyRevenue(int month, int year){
+        return paymentDAO.getMonthlyRevenue(month, year);
+    }
+
 }

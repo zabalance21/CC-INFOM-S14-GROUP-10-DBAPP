@@ -4,11 +4,9 @@ import Model.DAO.ContractDAO;
 import Model.DAO.ContractServiceDao;
 import Model.DAO.ServiceDAO;
 import Model.Entities.Contract;
-import Model.Entities.ContractService;
 import Model.Entities.Invoice;
 import Model.Entities.Service;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

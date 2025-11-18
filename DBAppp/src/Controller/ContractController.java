@@ -2,8 +2,6 @@ package Controller;
 
 import Model.Entities.*;
 import Model.DAO.*;
-import View.InputHelper;
-
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -14,16 +12,14 @@ public class ContractController {
     private final ClientDAO clientDAO;
     private final ServiceDAO serviceDAO;
     private final AccountManagerDAO  accountManagerDAO;
-    private final BranchDAO  branchDAO;
     private final ContractServiceDao contractServiceDAO;
     private final InvoiceDAO invoiceDAO;
 
 
     public ContractController(ContractDAO contractDAO,
-                              ClientDAO clientDAO, ServiceDAO serviceDAO, BranchDAO branchDAO, ContractServiceDao contractServiceDAO,
+                              ClientDAO clientDAO, ServiceDAO serviceDAO, ContractServiceDao contractServiceDAO,
                               InvoiceDAO invoiceDAO, AccountManagerDAO accountManagerDAO) {
         this.contractDAO = contractDAO;
-        this.branchDAO = branchDAO;
         this.clientDAO = clientDAO;
         this.serviceDAO = serviceDAO;
         this.contractServiceDAO = contractServiceDAO;
@@ -40,7 +36,6 @@ public class ContractController {
         return contractDAO.getContractByID(id);
     }
 
-
     // Soft Delete a contract by ID
     public void deleteContract(String id){
         contractDAO.closeContract(id);
@@ -51,6 +46,17 @@ public class ContractController {
         contractDAO.viewRelatedRecords(id);
     }
 
+    public List<Contract> getAllContracts(){
+        List<Contract> allContracts = new ArrayList<>();
+        ClientController clientController = new ClientController(contractDAO, invoiceDAO, clientDAO);
+        
+        List<Client> clients = clientController.getAllClients();
+        for(Client client : clients){
+            allContracts.addAll(contractDAO.getContractsByClientId(client.getClientId()));
+        }
+        return allContracts;
+
+    }
     // Prints all Closed Contracts
     public void showAllClosedContracts(String clientid){
         List<Contract> contracts = contractDAO.getContractsByClientId(clientid);
