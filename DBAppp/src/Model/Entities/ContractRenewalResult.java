@@ -1,7 +1,5 @@
 package Model.Entities;
 
-import Model.Entities.ContractStatus;
-
 import java.time.LocalDate;
 
 public class ContractRenewalResult {

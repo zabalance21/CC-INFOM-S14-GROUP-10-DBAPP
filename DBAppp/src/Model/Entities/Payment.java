@@ -21,6 +21,15 @@ public class Payment {
         setReceiptNumber();
     }
 
+    //Constructor overload for setting payments already in the DB, refer to PaymentDAO.java method getRecentPayments
+    public Payment(String paymentId, String invoiceId, LocalDate paymentDate, BigDecimal amount, String receiptNumber) {
+        this.paymentId = paymentId;
+        this.invoiceId = invoiceId;
+        this.paymentDate = paymentDate;
+        this.amount = amount;
+        this.receiptNumber = receiptNumber;
+    }
+
     private void setPaymentId(){
         if(paymentIdCounter > MAX_RECIEPTS){
             throw new IllegalStateException("All possible payment IDs have been used.");

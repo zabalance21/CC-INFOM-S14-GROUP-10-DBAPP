@@ -39,6 +39,10 @@ public class ContractService {
     public String getContractID() {
         return contractID;
     }
+
+    public ClientStatus getStatus(){
+        return status;
+    }
     public String getContractServiceID() { return contractServiceID; }
 
     public String toString(){

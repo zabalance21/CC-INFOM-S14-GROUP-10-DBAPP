@@ -1,6 +1,5 @@
 package Model.Entities;
 
-import java.util.ArrayList;
 
 public class Client {
     private String clientId;
