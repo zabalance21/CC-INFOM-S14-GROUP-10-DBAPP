@@ -301,4 +301,87 @@ public class ContractDAO {
         }
     }
 
+    public int getAllContractsCount(){
+        String sql = "SELECT COUNT(*) as count FROM Contract";
+
+        try(Connection conn = DBConnection.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            ResultSet rs = stmt.executeQuery()){
+
+            if(rs.next()){
+                return rs.getInt("count");
+            }
+            
+        } catch (SQLException e){
+            e.printStackTrace();
+        }
+
+        return 0;
+    }
+
+    public List<Contract> getRecentContracts(int days){
+        List<Contract> contracts = new ArrayList<>();
+        String sql = "SELECT * FROM Contract WHERE startData >= DATE_SUB(CURDATE(), INTERVAL ? DAY) ORDER BY startDate DESC";
+
+        try(Connection conn = DBConnection.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql)){
+
+            stmt.setInt(1, days);
+            try (ResultSet rs = stmt.executeQuery()){
+                while (rs.next()){
+                    Contract contract = new Contract(
+                        rs.getString("contractId"),
+                        rs.getString("clientId"),
+                        rs.getString("managerId"),
+                        rs.getDate("startDate").toLocalDate(),
+                        rs.getDate("endDate").toLocalDate()
+                        );
+                    contract.setContractStatus(ContractStatus.valueOf(rs.getString("contract_status").toUpperCase()));
+                    contracts.add(contract);
+                }
+            }
+
+        } catch (SQLException e){
+            e.printStackTrace();
+        }
+        return contracts;
+    }
+
+    public int getExpiringContractCount(int days){
+        String sql = "SELECT COUNT(*) as count FROM Contract WHERE contract_status = 'ACTIVE' and endDate BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL ? DAY)";
+        
+        try(Connection conn = DBConnection.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql)){
+                
+            stmt.setInt(1, days);
+            try (ResultSet rs = stmt.executeQuery()){
+                if(rs.next()){
+                    return rs.getInt("count");
+                }
+            }
+
+        } catch(SQLException e){
+            e.printStackTrace();
+        }
+
+        return 0;
+    }
+
+    public int getActiveContractsCount(){
+        String sql = "SELECT COUNT(*) as count FROM Contract WHERE contract_status = 'ACTIVE'";
+
+        try(Connection conn = DBConnection.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            ResultSet rs = stmt.executeQuery()){
+
+            if(rs.next()){
+                return rs.getInt("count");
+            }
+
+        } catch (SQLException e){
+            e.printStackTrace();
+        }
+
+        return 0;
+    }
 }

@@ -1,19 +1,17 @@
 package Model.DAO;
 
-import Model.Entities.Contract;
 import Model.Entities.Payment;
 import Model.util.DBConnection;
 
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.LocalDate;
+import java.util.List;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
-
 
 public class PaymentDAO {
 
@@ -122,5 +120,94 @@ public class PaymentDAO {
         return quarterlyReport;
     }
 
+    public List<Payment> getAllPayments(){
+        List<Payment> payments = new ArrayList<>();
+        String sql = "SELECT * FROM Payment";
 
+        try(Connection conn = DBConnection.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            ResultSet rs = stmt.executeQuery()){
+
+            while(rs.next()){
+                Payment payment = new Payment(
+                    rs.getString("paymentID"),
+                    rs.getString("invoiceId"),
+                    rs.getDate("paymentDate").toLocalDate(),
+                    rs.getBigDecimal("amount"),
+                    rs.getString("referencedNumber")
+                );
+                payments.add(payment);
+            }
+
+        }catch(SQLException e){
+            e.printStackTrace();
+        }
+
+        return payments;
+    }
+
+    public List<Payment> getRecentPayments(int days){
+        List<Payment> payments = new ArrayList<>();
+        String sql = "SELECT * FROM Payment WHERE paymentDate >= DATE_SUB(CURDATE(), INTERVAL ? DAY) ORDER BY paymentDate DESC";
+
+        try (Connection conn = DBConnection.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql)){
+
+            stmt.setInt(1, days);
+            try(ResultSet rs = stmt.executeQuery()){
+                while (rs.next()){
+                    Payment payment = new Payment(
+                        rs.getString("paymentID"),
+                        rs.getString("invoiceId"),
+                        rs.getDate("paymentDate").toLocalDate(),
+                        rs.getBigDecimal("amount"),
+                        rs.getString("referencedNumber")
+                    );
+                    payments.add(payment);
+                }
+            }
+        } catch (SQLException e){
+            e.printStackTrace();
+        }
+        return payments;
+    }
+
+    public BigDecimal getMonthlyRevenue(){
+        String sql = "SELECT SUM(amount) as total FROM Payment WHERE MONTH(paymentDate) = MONTH(CURDATE()) AND YEAR(paymentDate) = YEAR(CURDATE())";
+
+        try (Connection conn = DBConnection.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            ResultSet rs = stmt.executeQuery()){
+            
+            if(rs.next()){
+                return rs.getBigDecimal("total") != null ? rs.getBigDecimal("total") : BigDecimal.ZERO;
+            }
+
+        } catch (SQLException e){
+            e.printStackTrace();
+        }
+        return BigDecimal.ZERO;
+    }
+
+    public BigDecimal getMonthlyRevenue(int month, int year){
+        String sql = "SELECT SUM(amount) as total FROM Payment WHERE MONTH(paymentDate) = ? AND YEAR(paymentDate) = ?";
+
+        try (Connection conn = DBConnection.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql)){
+
+            stmt.setInt(1, month);
+            stmt.setInt(2, year);
+
+            try(ResultSet rs = stmt.executeQuery()){
+                if(rs.next()){
+                    BigDecimal revenue = rs.getBigDecimal("total");
+                    return revenue != null ? revenue : BigDecimal.ZERO;
+                }
+            }
+
+        } catch (SQLException e){
+            e.printStackTrace();
+        }
+        return BigDecimal.ZERO;
+    }
 }

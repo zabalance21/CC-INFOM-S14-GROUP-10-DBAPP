@@ -3,7 +3,6 @@ package Model.DAO;
 import Model.Entities.*;
 import Model.util.DBConnection;
 
-import java.security.PublicKey;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;

@@ -155,4 +155,39 @@ public class BranchDAO {
 
         return branches;
     }
+
+    public int getClosedBranchesCount(){
+        String sql = "SELECT COUNT(*) as count FROM Branch WHERE status = 'CLOSED'";
+
+        try(Connection conn = DBConnection.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            ResultSet rs = stmt.executeQuery()){
+
+            if(rs.next()){
+                return rs.getInt("count");
+            }
+
+        } catch (SQLException e){
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    public int getOperationalBranchesCount(){
+        String sql = "SELECT COUNT(*) as count FROM Branch WHERE status = 'Operational'";
+
+        try(Connection conn = DBConnection.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            ResultSet rs = stmt.executeQuery()){
+
+            if(rs.next()){
+                return rs.getInt("count");
+            }
+
+        } catch (SQLException e){
+            e.printStackTrace();
+        }
+
+        return 0;
+    }
 }

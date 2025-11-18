@@ -6,7 +6,6 @@ import Model.util.DBConnection;
 
 import java.sql.*;
 import java.util.*;
-import java.math.BigDecimal;
 
 public class ServiceDAO {
 
@@ -152,4 +151,38 @@ public class ServiceDAO {
         }
     }
 
+    public int getInactiveServiceCount(){
+        String sql = "SELECT COUNT(*) as count FROM Service WHERE availability IN ('Unavailable', 'Discontinued')";
+
+        try(Connection conn = DBConnection.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            ResultSet rs = stmt.executeQuery()){
+
+            if(rs.next()){
+                return rs.getInt("count");
+            }
+
+        } catch (SQLException e){
+            e.printStackTrace();
+        }
+
+        return 0;
+    }
+
+    public int getAvailableServiceCount(){
+        String sql = "SELECT COUNT(*) as count FROM Service WHERE availability = 'Available'";
+
+        try(Connection conn = DBConnection.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            ResultSet rs = stmt.executeQuery()){
+
+            if(rs.next()){
+                return rs.getInt("count");
+            }
+
+        } catch (SQLException e){
+            e.printStackTrace();
+        }
+        return 0;
+    }
 }

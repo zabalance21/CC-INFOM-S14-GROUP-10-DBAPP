@@ -46,8 +46,6 @@ public class AccountManagerDAO {
         return manager;
     }
 
-
-
     // READ - receives all manager
     public List<AccountManager> getAllManagers(){
         List<AccountManager > managers = new ArrayList<>();
@@ -234,5 +232,23 @@ public class AccountManagerDAO {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+    public int getActiveManagersCount(){
+        String sql = "SELECT COUNT(*) as count FROM AccountManager WHERE employment_status = 'Active'";
+
+        try (Connection conn = DBConnection.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            ResultSet rs = stmt.executeQuery()){
+            
+            if (rs.next()){
+                return rs.getInt("count");
+            }
+
+        } catch (SQLException e){
+            e.printStackTrace();
+        }
+
+        return 0;
     }
 }

@@ -8,7 +8,6 @@ import Model.util.DBConnection;
 
 import java.math.BigDecimal;
 import java.sql.*;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -327,7 +326,64 @@ public class InvoiceDAO {
         return outstandingReport;
     }
 
+    public List<Invoice> getOverdueInvoices(){
+        List<Invoice> invoices = new ArrayList<>();
+        String sql = "SELECT i.* FROM Invoice i WHERE i.status = 'OVERDUE' and i.dueDate < CURDATE()";
 
+        try(Connection conn = DBConnection.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            ResultSet rs = stmt.executeQuery()){
+            
+            while(rs.next()){
+                Invoice invoice = new Invoice(
+                    rs.getString("invoiceId"), 
+                    rs.getString("contractId"), 
+                    rs.getDate("invoiceDate").toLocalDate(),
+                    rs.getDate("dueDate").toLocalDate(),
+                    rs.getBigDecimal("amount"),
+                    rs.getBigDecimal("lateFee"),
+                    rs.getString("status")
+                    );
+                    invoices.add(invoice);
+            }
 
+        } catch (SQLException e){
+            e.printStackTrace();
+        }
+        return invoices;
+    }
 
+    public int getUnpaidInvoicesCount(){
+        String sql = "SELECT COUNT(*) as count FROM Invoice WHERE status IN ('UNPAID', 'OVERDUE')";
+
+        try(Connection conn = DBConnection.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            ResultSet rs = stmt.executeQuery()){
+
+            if(rs.next()){
+                return rs.getInt("count");
+            }
+
+        } catch(SQLException e){
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    public int getOverdueInvoicesCount(){
+        String sql = "SELECT COUNT(*) as count FROM Invoice WHERE status = 'OVERDUE'";
+
+        try(Connection conn = DBConnection.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            ResultSet rs = stmt.executeQuery()){
+            
+            if(rs.next()){
+                return rs.getInt("count");
+            }
+
+        } catch (SQLException e){
+            e.printStackTrace();
+        }
+        return 0;
+    }
 }

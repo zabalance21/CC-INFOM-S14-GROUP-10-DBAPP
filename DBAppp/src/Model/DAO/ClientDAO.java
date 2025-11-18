@@ -311,6 +311,21 @@ public class ClientDAO {  // FOR SQL CLIENT TABLE QUERIES
         return clientHistories;
     }
 
+    public int getActiveClientsCount(){
+        String sql = "SELECT COUNT(*) as count FROM Client WHERE status = 'Active'";
 
+        try(Connection conn = DBConnection.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            ResultSet rs = stmt.executeQuery()){
 
+            if(rs.next()){
+                return rs.getInt("count");
+            }
+
+        } catch (SQLException e){
+            e.printStackTrace();
+        }
+
+        return 0;
+    }
 }
