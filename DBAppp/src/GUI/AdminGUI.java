@@ -61,7 +61,7 @@ public class AdminGUI {
 
     private void initializeGUI(){
         mainFrame = new JFrame("IT Services - Admin System");
-        mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        mainFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         mainFrame.setSize(1400,900);
         mainFrame.setLayout(new BorderLayout());
 
@@ -102,6 +102,10 @@ public class AdminGUI {
         menuBar.add(fileMenu);
         menuBar.add(reportsMenu);
         mainFrame.setJMenuBar(menuBar);
+    }
+
+    public JFrame getFrame(){
+        return mainFrame;
     }
 
     private void createTabbedInterface(){

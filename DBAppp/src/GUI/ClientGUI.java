@@ -50,7 +50,7 @@ public class ClientGUI {
 
     private void initializeGUI(){
         mainFrame = new JFrame("IT Services - Management System");
-        mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        mainFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         mainFrame.setSize(800, 400);
         mainFrame.setLayout(new BorderLayout());
 
@@ -59,6 +59,10 @@ public class ClientGUI {
 
         mainFrame.setLocationRelativeTo(null);
         mainFrame.setVisible(true);
+    }
+
+    public JFrame getFrame(){
+        return mainFrame;
     }
 
     private void createMenuBar(){
