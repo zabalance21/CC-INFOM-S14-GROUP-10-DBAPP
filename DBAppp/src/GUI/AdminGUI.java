@@ -9,12 +9,12 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 
 import java.util.List;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 import java.time.temporal.ChronoUnit;
 
 public class AdminGUI {
@@ -51,7 +51,7 @@ public class AdminGUI {
 
     private void initializeControllers(){
         this.clientController = new ClientController(contractDAO, invoiceDAO, clientDAO);
-        this.paymentController = new PaymentController(paymentDAO, clientDAO, invoiceDAO, contractDAO, contractServiceDAO);
+        this.paymentController = new PaymentController(paymentDAO, clientDAO, invoiceDAO, contractDAO);
         this.contractController = new ContractController(contractDAO, clientDAO, serviceDAO, contractServiceDAO, invoiceDAO, accountManagerDAO);
         this.contractServiceController = new ContractServiceController(contractServiceDAO, clientDAO, serviceDAO, contractDAO, invoiceDAO);
         this.managerController = new ManagerController(accountManagerDAO, contractDAO, clientDAO);
@@ -261,7 +261,13 @@ public class AdminGUI {
         activityPanel.setBorder(BorderFactory.createTitledBorder("Recent Activity"));
 
         String[] activityColumns = {"Type", "Description", "Date", "Status"};
-        DefaultTableModel activityModel = new DefaultTableModel(activityColumns, 0);
+        DefaultTableModel activityModel = new DefaultTableModel(activityColumns, 0){
+            @Override
+            public boolean isCellEditable(int row, int column){
+                return false;
+            }
+        };
+
         JTable activityTable = new JTable(activityModel);
 
         loadRecentActivities(activityModel);
@@ -307,7 +313,6 @@ public class AdminGUI {
 
         return card;
     }
-
 
     private String checkSystemAlerts(){
         StringBuilder alerts = new StringBuilder();
@@ -672,14 +677,23 @@ public class AdminGUI {
     private void loadContractData(){
         contractModel.setRowCount(0);
         List<Contract> contracts = contractController.getAllContracts();
-        for (Contract contract : contracts){
+        for (Contract contract : contracts) {
             Client client = clientController.getClientByID(contract.getClientID());
             AccountManager manager = accountManagerDAO.getManagerByID(contract.getManagerID());
-
+            
+            List<ContractService> contractServices = contractServiceDAO.getContractServicesByContractId(contract.getContractID());
+            String servicesInfo = contractServices.stream()
+                .map(cs -> {
+                    Service service = serviceDAO.getServiceById(cs.getServiceID());
+                    return service != null ? service.getName() : "Unknown";
+                })
+                .collect(Collectors.joining(", "));
+            
             contractModel.addRow(new Object[]{
                 contract.getContractID(),
                 client != null ? client.getName() : "N/A",
                 manager != null ? manager.getName() : "N/A",
+                servicesInfo, // Show services instead of single service
                 contract.getStartDate(),
                 contract.getEndDate(),
                 contract.getContractStatus().toString()
@@ -688,9 +702,9 @@ public class AdminGUI {
     }
 
     private void showCreateContractDialog(){
-        JDialog dialog = new JDialog(mainFrame, "Create New Contract", true);
-        dialog.setLayout(new BorderLayout());
-        dialog.setSize(500, 400);
+        JDialog contractDialog = new JDialog(mainFrame, "Create New Contract", true);
+        contractDialog.setLayout(new BorderLayout());
+        contractDialog.setSize(600, 500);
 
         JPanel formPanel = new JPanel(new GridLayout(5, 2, 5, 5));
 
@@ -700,11 +714,16 @@ public class AdminGUI {
             clientCombo.addItem(client);
         }
 
-        JComboBox<Service> serviceCombo = new JComboBox<>();
+        JList<Service> serviceList = new JList<>();
+        DefaultListModel<Service> serviceModel = new DefaultListModel<>();
         List<Service> availableServices = serviceController.getAvailableServices();
         for(Service service : availableServices){
-            serviceCombo.addItem(service);
+            serviceModel.addElement(service);
         }
+        serviceList.setModel(serviceModel);
+        serviceList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        JScrollPane serviceScrollPane = new JScrollPane(serviceList);
+        serviceScrollPane.setPreferredSize(new Dimension(200,100));
 
         JComboBox<AccountManager> managerCombo = new JComboBox<>();
         List<AccountManager> activeManagers = managerController.getAllActiveManagers();
@@ -717,14 +736,28 @@ public class AdminGUI {
 
         formPanel.add(new JLabel("Client:"));
         formPanel.add(clientCombo);
-        formPanel.add(new JLabel("Service:"));
-        formPanel.add(serviceCombo);
+        formPanel.add(new JLabel("Service (select multiple):"));
+        formPanel.add(serviceScrollPane);
         formPanel.add(new JLabel("Account Manager:"));
         formPanel.add(managerCombo);
         formPanel.add(new JLabel("Start Date (YYYY-MM-DD):"));
         formPanel.add(startDateField);
         formPanel.add(new JLabel("End Date (YYYY-MM-DD):"));
         formPanel.add(endDateField);
+
+        JLabel totalAmountLabel = new JLabel("Total : ₱");
+        formPanel.add(new JLabel("Total Amount: "));
+        formPanel.add(totalAmountLabel);
+
+        serviceList.addListSelectionListener(e -> {
+            if(!e.getValueIsAdjusting()){
+                BigDecimal total = BigDecimal.ZERO;
+                for(Service service : serviceList.getSelectedValuesList()){
+                    total = total.add(service.getRate());
+                }
+                totalAmountLabel.setText("Total: ₱"+ total);
+            }
+        });
 
         JPanel buttonPanel = new JPanel();
         JButton createButton = new JButton();
@@ -733,155 +766,128 @@ public class AdminGUI {
         createButton.addActionListener(e ->{
             try {
                 Client selectedClient = (Client) clientCombo.getSelectedItem();
-                Service selectedService = (Service) serviceCombo.getSelectedItem();
+                List<Service> selectedServices = serviceList.getSelectedValuesList();
                 AccountManager selectedManager = (AccountManager) managerCombo.getSelectedItem();
 
-                if (selectedClient == null || selectedService == null || selectedManager == null){
-                    JOptionPane.showMessageDialog(dialog, "Please select all required fields.", "Error", JOptionPane.ERROR_MESSAGE);
+                if (selectedClient == null || selectedServices.isEmpty() || selectedManager == null){
+                    JOptionPane.showMessageDialog(contractDialog, "Please select all required fields.", "Error", JOptionPane.ERROR_MESSAGE);
                     return;
                 }
 
-                boolean success = contractController.createContractAndInvoice(selectedClient.getName(), selectedService.getServiceId(), selectedManager.getManagerID());
+                List<String> serviceIds = selectedServices.stream().map(Service::getServiceId).collect(Collectors.toList());
+                boolean success = contractController.createContractAndInvoice(selectedClient.getName(), serviceIds, selectedManager.getManagerID());
 
                 if (success){
                     loadContractData();
-                    dialog.dispose();
-                    JOptionPane.showMessageDialog(mainFrame, "Contract created succesfully!");
+                    JOptionPane.showMessageDialog(contractDialog, 
+                        "Contract created successfully with " + selectedServices.size() + " services!\n" +
+                        "Total Amount: ₱" + totalAmountLabel.getText().replace("Total: ", ""),
+                        "Success", JOptionPane.INFORMATION_MESSAGE);
+                    contractDialog.dispose();
                 } else {
-                    JOptionPane.showMessageDialog(dialog, "Failed to create contract. Please try again.", "Error", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(contractDialog, "Failed to create contract. Please try again.", "Error", JOptionPane.ERROR_MESSAGE);
                 }
             } catch (Exception ex){
-                JOptionPane.showMessageDialog(dialog, "Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(contractDialog, "Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         });
 
-        cancelButton.addActionListener(e -> dialog.dispose());
+        cancelButton.addActionListener(e -> contractDialog.dispose());
         
         buttonPanel.add(createButton);
         buttonPanel.add(cancelButton);
 
-        dialog.add(formPanel, BorderLayout.CENTER);
-        dialog.add(buttonPanel, BorderLayout.SOUTH);
-        dialog.setLocationRelativeTo(mainFrame);
-        dialog.setVisible(true);
+        contractDialog.add(formPanel, BorderLayout.CENTER);
+        contractDialog.add(buttonPanel, BorderLayout.SOUTH);
+        contractDialog.setLocationRelativeTo(mainFrame);
+        contractDialog.setVisible(true);
     }
 
     private void renewSelectedContract(){
-        int selectedRow = contractTable.getSelectedRow();
+        int selectedRow = clientTable.getSelectedRow();
         if(selectedRow >= 0){
-            String contractID = (String) contractModel.getValueAt(selectedRow, 0);
-            Contract contract = contractController.getContractByID(contractID);
+            String clientID = (String) contractModel.getValueAt(selectedRow, 0);
+            Client client = clientController.getClientByID(clientID);
 
-            if(contract != null){
-                Client client = clientController.getClientByID(contract.getClientID());
-                if(client != null){
-                    String contractServiceID = showContractServiceSelectionDialog(client.getClientId());
+            if (client != null){
+                List<Contract> closedContracts = contractDAO.getClosedContractsForClient(clientID);
 
-                    if(contractServiceID != null && !contractServiceID.trim().isEmpty()){
-                        ContractRenewalResult result = contractServiceController.renewContract(client.getClientId(), contractServiceID);
-                
-                        if (result != null){
-                            loadContractData();
-                            String message = String.format(
-                                "Contract Renewed Successfully!\n\n" +
-                                "Old Contract:\n" +
-                                "  Start: %s\n  End: %s\n  Status: %s\n\n" +
-                                "New Contract:\n" + 
-                                "  Start: %s\n  End: %s\n  Status: %s",
-                                result.oldStart, result.oldEnd, result.oldStatus,
-                                result.newStart, result.newEnd, result.newStatus
-                            );
-                            JOptionPane.showMessageDialog(mainFrame, message, "Contract Renewed", JOptionPane.INFORMATION_MESSAGE);
-                        } else {
-                            JOptionPane.showMessageDialog(mainFrame, "Contract renewal failed.", "Error", JOptionPane.ERROR_MESSAGE);
+                if(closedContracts.isEmpty()){
+                    JOptionPane.showMessageDialog(
+                        mainFrame,
+                        "No closed contracts found for this client.\n\n" +
+                        "To renew a contract, it must first be closed or expired.",
+                        "No contracts to renew",
+                        JOptionPane.INFORMATION_MESSAGE
+                    );
+                    return;
+                }
+
+                String contractID = showSimpleContractSelectionDialog(clientID, closedContracts);
+                if (contractID != null && !contractID.trim().isEmpty()){
+                    int confirm = JOptionPane.showConfirmDialog(
+                        mainFrame,
+                        "Renew this contract for 1 year?\n\n" +
+                    "This will:\n"+
+                    "• Reactivate the contract\n" +
+                    "• Reactivate ALL services in the contract\n" +
+                    "• Create a new invoice\n" +
+                    "• Set new 1-year dates",
+                    "Confirm Contract Renewal",
+                    JOptionPane.YES_NO_OPTION
+                    );
+
+                    if (confirm == JOptionPane.YES_OPTION){
+                        try{
+                            ContractRenewalResult result = contractServiceController.renewContract(clientID, contractID);
+
+                            if (result != null){
+                                String message = String.format(
+                                    "Contract Renewal Successful!\n\n" + 
+                                    "Old Contract Details:\n" + 
+                                    "• Start: %s\n• End: %s\n• Status: %s\n\n" + 
+                                    "New Contract Details:\n" + 
+                                    "• Start: %s\n• End: %s\n• Status: %s\n\n" +
+                                    "All services have been reactivated automatically.", 
+                                    result.oldStart, result.oldEnd, result.oldStatus,
+                                    result.newStart, result.newEnd, result.newStatus
+                                );
+
+                                JOptionPane.showMessageDialog(mainFrame, message, "Contract Renewd", JOptionPane.INFORMATION_MESSAGE);
+
+                                loadContractData();
+                            } else {
+                                JOptionPane.showMessageDialog(mainFrame, "Contract renewal failed.", "Error", JOptionPane.ERROR_MESSAGE);
+                            }
+                        } catch (Exception ex){
+                            JOptionPane.showMessageDialog(mainFrame, "Error during renewal: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
                         }
                     }
                 }
             }
         } else {
-            JOptionPane.showMessageDialog(mainFrame, "Please select a contract to renew.", "Warning", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(mainFrame, "Please select a client first.", "Warning", JOptionPane.WARNING_MESSAGE);
         }
     }
 
-    private String showContractServiceSelectionDialog(String clientId) {
-        // Get inactive contract services for this client
-        List<ContractService> inactiveServices = contractServiceDAO.getAllInactiveContractServices();
+    private String showSimpleContractSelectionDialog(String clientID, List<Contract> closedContracts) {
+        String[] contractOptions = closedContracts.stream()
+            .map(Contract::getContractID)
+            .toArray(String[]::new);
         
-        // Filter by client (you might need to add this method to your DAO)
-        List<ContractService> clientInactiveServices = new ArrayList<>();
-        for(ContractService cs : inactiveServices){
-            Contract contract = contractServiceDAO.getContractByContractServiceId(cs.getContractServiceID());
-
-            if (contract != null && contract.getClientID().equals(clientId)){
-                clientInactiveServices.add(cs);
-            }
-        }
+        if (contractOptions.length == 0) return null;
         
-        if (clientInactiveServices.isEmpty()) {
-            JOptionPane.showMessageDialog(mainFrame, 
-                "No inactive contract services found for this client.", 
-                "No Services", JOptionPane.INFORMATION_MESSAGE);
-            return null;
-        }
+        String selectedContract = (String) JOptionPane.showInputDialog(mainFrame,
+            "Select a contract to renew:",
+            "Contract Renewal",
+            JOptionPane.QUESTION_MESSAGE,
+            null,
+            contractOptions,
+            contractOptions[0]);
         
-        // Create selection dialog
-        JDialog dialog = new JDialog(mainFrame, "Select Contract Service to Renew", true);
-        dialog.setLayout(new BorderLayout());
-        dialog.setSize(500, 300);
-        
-        // Create table for contract services
-        String[] columns = {"Contract Service ID", "Service ID", "Contract ID", "Status"};
-        DefaultTableModel model = new DefaultTableModel(columns, 0);
-        JTable serviceTable = new JTable(model);
-        
-        // Populate table
-        for (ContractService cs : clientInactiveServices) {
-            model.addRow(new Object[]{
-                cs.getContractServiceID(),
-                cs.getServiceID(),
-                cs.getContractID(),
-                cs.getStatus().toString()
-            });
-        }
-        
-        JScrollPane scrollPane = new JScrollPane(serviceTable);
-        
-        // Selection panel
-        JPanel selectionPanel = new JPanel(new BorderLayout());
-        selectionPanel.add(new JLabel("Select a contract service to renew:"), BorderLayout.NORTH);
-        selectionPanel.add(scrollPane, BorderLayout.CENTER);
-        
-        // Button panel
-        JPanel buttonPanel = new JPanel();
-        JButton selectButton = new JButton("Select");
-        JButton cancelButton = new JButton("Cancel");
-        
-        final String[] selectedID = {null};
-        
-        selectButton.addActionListener(e -> {
-            int selectedRow = serviceTable.getSelectedRow();
-            if (selectedRow >= 0) {
-                selectedID[0] = (String) model.getValueAt(selectedRow, 0);
-                dialog.dispose();
-            } else {
-                JOptionPane.showMessageDialog(dialog, "Please select a contract service.", "Warning", JOptionPane.WARNING_MESSAGE);
-            }
-        });
-        
-        cancelButton.addActionListener(e -> {
-            dialog.dispose();
-        });
-        
-        buttonPanel.add(selectButton);
-        buttonPanel.add(cancelButton);
-        
-        dialog.add(selectionPanel, BorderLayout.CENTER);
-        dialog.add(buttonPanel, BorderLayout.SOUTH);
-        dialog.setLocationRelativeTo(mainFrame);
-        dialog.setVisible(true);
-        
-        return selectedID[0];
+        return selectedContract;
     }
+    
 
     private void closeSelectedContract(){
         int selectedRow = contractTable.getSelectedRow();
