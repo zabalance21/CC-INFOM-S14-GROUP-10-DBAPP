@@ -1,7 +1,7 @@
 package View;
 
 // UNCOMMENT TO USE TERMINAL AND COMMENT OUT EVERYTHING STARTING FROM "import GUI.CLIENTGUI;"
-/*
+/* 
 import java.util.Scanner;
 import View.App;
 
@@ -37,9 +37,12 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 public class Main {
     private static final String ADMIN_PASSWORD = "Admin"; //Change if needed
+    private static JFrame selectorFrame;
     public static void main(String[] args) {
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
@@ -51,21 +54,49 @@ public class Main {
     }
 
     private static void showInterfaceSelector(){
-        JFrame selectorFrame = new JFrame("IT Services Management System");
+        if(selectorFrame != null && selectorFrame.isVisible()){
+            selectorFrame.toFront();
+            return;
+        }
+        
+        selectorFrame = new JFrame("IT Services Management System");
         selectorFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         selectorFrame.setSize(400, 300);
         selectorFrame.setLocationRelativeTo(null);
         selectorFrame.setLayout(new BorderLayout());
 
+        //Header
         JLabel headerLabel = new JLabel("Welcome to IT Services Management System", SwingConstants.CENTER);
         headerLabel.setFont(new Font("Arial", Font.BOLD, 16));
         headerLabel.setBorder(BorderFactory.createEmptyBorder(20, 10, 20, 10));
 
+        //Button Panel
         JPanel buttonPanel = new JPanel(new GridLayout(2, 1, 10, 10));
         buttonPanel.setBorder(BorderFactory.createEmptyBorder(20, 50, 20, 50));
         
         JButton clientButton = new JButton("Client Interface");
         JButton adminButton = new JButton("Admin Interface");
+
+        clientButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                selectorFrame.setVisible(false); // Hide selector
+                launchClientGUI();
+            }
+        });
+
+        adminButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (authenticateAdminGUI()) {
+                    selectorFrame.setVisible(false); // Hide selector
+                    launchAdminGUI();
+                } else {
+                    JOptionPane.showMessageDialog(null, "Wrong Password", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
+        
         
         clientButton.setFont(new Font("Arial", Font.PLAIN, 14));
         adminButton.setFont(new Font("Arial", Font.PLAIN, 14));
@@ -76,26 +107,6 @@ public class Main {
         clientButton.setFocusPainted(false);
         adminButton.setFocusPainted(false);
         
-        clientButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                selectorFrame.dispose();
-                launchClientGUI();
-            }
-        });
-        
-        adminButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (authenticateAdminGUI()) {
-                    selectorFrame.dispose();
-                    launchAdminGUI();
-                } else {
-                    JOptionPane.showMessageDialog(null, "Wrong Password", "Error", JOptionPane.ERROR_MESSAGE);
-                }
-            }
-        });
-        
         buttonPanel.add(clientButton);
         buttonPanel.add(adminButton);
         
@@ -105,6 +116,7 @@ public class Main {
             "Client Interface: For creating contracts, processing payments, and contract renewals.\n\n" +
             "Admin Interface: Full system management including reports, user management, and system configuration."
         );
+
         infoArea.setEditable(false);
         infoArea.setBackground(selectorFrame.getBackground());
         infoArea.setFont(new Font("Arial", Font.PLAIN, 12));
@@ -143,10 +155,17 @@ public class Main {
     private static void launchClientGUI(){
         SwingUtilities.invokeLater(() -> {
             try {
-                new ClientGUI();
+               ClientGUI clientGUI = new ClientGUI();
+
+               clientGUI.getFrame().addWindowListener(new WindowAdapter() {
+                    @Override
+                    public void windowClosed(WindowEvent e){
+                        selectorFrame.setVisible(true);
+                    }
+               });
             } catch (Exception e){
                 JOptionPane.showMessageDialog(null, "Error launching Client GUI: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-                e.printStackTrace();
+                selectorFrame.setVisible(true);
             }
         });
     }
@@ -154,11 +173,17 @@ public class Main {
     private static void launchAdminGUI(){
         SwingUtilities.invokeLater(() -> {
             try{
-                new AdminGUI();
+                AdminGUI adminGUI = new AdminGUI();
+
+                adminGUI.getFrame().addWindowListener(new WindowAdapter() {
+                   @Override
+                   public void windowClosed(WindowEvent e){
+                        selectorFrame.setVisible(true);
+                   } 
+                });
             } catch (Exception e){
                 JOptionPane.showMessageDialog(null, "Error launching Admin GUI: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-                e.printStackTrace();
-                showInterfaceSelector();
+                selectorFrame.setVisible(true);
             }
         });
     }
