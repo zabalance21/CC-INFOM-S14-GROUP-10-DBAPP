@@ -31,18 +31,18 @@ public class ContractServiceDao {
         }
     }
 
-    public void deactivateContractServices(String csId) {
-        String sql = "UPDATE ContractService SET status = 'Inactive' WHERE csId = ?";
+    public void deactivateContractServices(String contractId) {
+        String sql = "UPDATE ContractService SET status = 'Inactive' WHERE contractId = ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setString(1, csId);
+            stmt.setString(1, contractId);
             int rowsUpdated = stmt.executeUpdate();
 
             if (rowsUpdated > 0) {
-                System.out.println("All ContractService records for " + csId + " marked as INACTIVE.");
+                System.out.println("All ContractService records for " + contractId + " marked as INACTIVE.");
             } else {
-                System.out.println("No ContractService records found for contract ID: " + csId);
+                System.out.println("No ContractService records found for contract ID: " + contractId);
             }
 
         } catch (SQLException e) {
@@ -54,7 +54,7 @@ public class ContractServiceDao {
     }
 
     public void reactivateContractServices(String csId) {
-        String sql = "UPDATE ContractService SET status = 'Active' WHERE csId = ?";
+        String sql = "UPDATE ContractService SET status = 'Active' WHERE contractId = ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
@@ -124,23 +124,23 @@ public class ContractServiceDao {
         return contractService;
     }
 
-    public ContractService getContractServiceByContractId(String contractId) {
+    public List<ContractService> getContractServicesByContractId(String contractId) {
+        List<ContractService> contractService = new ArrayList<>();
         String sql = "SELECT * FROM ContractService WHERE contractId = ?";
-        ContractService contractService = null;
-
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, contractId);
 
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    contractService = new ContractService(
+                while (rs.next()) {
+                    contractService.add(new ContractService(
                             rs.getString("csId"),
                             rs.getString("serviceId"),
-                            rs.getString("contractId")
-                    );
-                    contractService.setStatus(ClientStatus.valueOf(rs.getString("status").toUpperCase()));
+                            rs.getString("contractId"),
+                            ClientStatus.valueOf(rs.getString("status").toUpperCase())
+                    ));
+
                 }
             }
 
@@ -150,7 +150,6 @@ public class ContractServiceDao {
 
         return contractService;
     }
-
 
     public Contract getContractByContractServiceId(String csId) {
         String sql = "SELECT c.* FROM Contract c " +
@@ -182,7 +181,6 @@ public class ContractServiceDao {
         return contract;
     }
 
-
     public List<Contract> getContractsByServiceID(String serviceId) {
         List<Contract> contracts = new ArrayList<>();
         String sql = "SELECT c.contractId, c.clientId, c.managerId, c.startDate, c.endDate " +
@@ -213,8 +211,6 @@ public class ContractServiceDao {
 
         return contracts;
     }
-
-
 
     public List<Invoice> getInvoicesByServiceID(String serviceId) {
         List<Invoice> invoices = new ArrayList<>();

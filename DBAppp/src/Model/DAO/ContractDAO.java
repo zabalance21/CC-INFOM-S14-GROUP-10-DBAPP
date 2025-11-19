@@ -1,4 +1,5 @@
 package Model.DAO;
+
 import Model.Entities.Contract;
 import Model.Entities.ContractStatus;
 import Model.util.DBConnection;
@@ -94,6 +95,7 @@ public class ContractDAO {
 
     // SOFT DELETE - Mark contract as Closed
     public void closeContract(String contractId) {
+        ContractServiceDao cs = new ContractServiceDao();
         String sql = "UPDATE Contract SET contract_status = 'Closed' WHERE contractId = ?";
 
         try (Connection conn = DBConnection.getConnection();
@@ -112,6 +114,8 @@ public class ContractDAO {
             e.printStackTrace();
             System.out.println("Error closing contract: " + e.getMessage());
         }
+
+        cs.deactivateContractServices(contractId);
     }
 
     public List<Contract> getContractsByManagerID(String managerId) {
@@ -321,7 +325,7 @@ public class ContractDAO {
 
     public List<Contract> getRecentContracts(int days){
         List<Contract> contracts = new ArrayList<>();
-        String sql = "SELECT * FROM Contract WHERE startData >= DATE_SUB(CURDATE(), INTERVAL ? DAY) ORDER BY startDate DESC";
+        String sql = "SELECT * FROM Contract WHERE startDate >= DATE_SUB(CURDATE(), INTERVAL ? DAY) ORDER BY startDate DESC";
 
         try(Connection conn = DBConnection.getConnection();
             PreparedStatement stmt = conn.prepareStatement(sql)){
@@ -383,5 +387,33 @@ public class ContractDAO {
         }
 
         return 0;
+    }
+
+    public List<Contract> getClosedContractsForClient(String clientID){
+        List<Contract> contracts = new ArrayList<>();
+        String sql = "SELECT * FROM Contract WHERE clientId = ? AND contract_status = 'Closed'";
+
+        try(Connection conn = DBConnection.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql)){
+
+            stmt.setString(1, clientID);
+            try (ResultSet rs = stmt.executeQuery()){
+                while (rs.next()){
+                    Contract contract = new Contract(
+                        rs.getString("contractId"),
+                        rs.getString("clientId"),
+                        rs.getString("managerId"),
+                        rs.getDate("startDate").toLocalDate(),
+                        rs.getDate("endDate").toLocalDate()
+                        );
+                    contract.setContractStatus(ContractStatus.valueOf(rs.getString("contract_status").toUpperCase()));
+                    contracts.add(contract);
+                }
+            }
+
+        } catch (SQLException e){
+            e.printStackTrace();
+        }
+        return contracts;
     }
 }

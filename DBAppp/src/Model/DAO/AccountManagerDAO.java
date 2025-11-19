@@ -46,6 +46,26 @@ public class AccountManagerDAO {
         return manager;
     }
 
+    public AccountManager getManagerByName(String managerName){
+        String sql = "SELECT * FROM AccountManager WHERE name = ?";
+        AccountManager manager = null;
+        try(Connection conn = DBConnection.getConnection();  PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, managerName);
+            ResultSet rs = stmt.executeQuery();
+            if(rs.next()) {
+                manager = new AccountManager(rs.getString("managerId"),
+                        rs.getString("name"),
+                        rs.getString("contactInfo"),
+                        rs.getString("branchId"));
+                manager.setStatus(ManagerStatus.valueOf(rs.getString("employment_status").toUpperCase()));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return manager;
+    }
+
+
     // READ - receives all manager
     public List<AccountManager> getAllManagers(){
         List<AccountManager > managers = new ArrayList<>();

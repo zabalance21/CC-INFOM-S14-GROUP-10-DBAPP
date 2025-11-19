@@ -79,6 +79,28 @@ public class ServiceDAO {
         return null;
     }
 
+    public Service getServiceByName(String name) {
+        String sql = "SELECT * FROM Service WHERE name = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, name);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return new Service(
+                            rs.getString("serviceId"),
+                            rs.getString("name"),
+                            rs.getString("description"),
+                            rs.getBigDecimal("rate"),
+                            rs.getString("availability")
+                    );
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     public List<Service> getAllServices() {
         List<Service> out = new ArrayList<>();
         String sql = "SELECT * FROM Service ORDER BY serviceId";
