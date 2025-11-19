@@ -241,4 +241,21 @@ public class PaymentDAO {
             return null;
         }
     }
+
+    public BigDecimal getTotalPaidForInvoice(String invoiceId) {
+        String sql = "SELECT SUM(amount) as totalPaid FROM Payment WHERE invoiceId = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, invoiceId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    BigDecimal total = rs.getBigDecimal("totalPaid");
+                    return total != null ? total : BigDecimal.ZERO;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return BigDecimal.ZERO;
+    }
 }
