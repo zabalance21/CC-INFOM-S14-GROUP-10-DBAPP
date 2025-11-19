@@ -8,6 +8,7 @@ import Model.Entities.*;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableRowSorter;
 import java.awt.*;
 
 import java.util.List;
@@ -428,14 +429,16 @@ public class AdminGUI {
                 return false;
             }
         };
-        clientTable = new JTable(clientModel);
+    clientTable = new JTable(clientModel);
+    clientTable.setAutoCreateRowSorter(true);
+    // If you ever display Name (ID) in this table, set a custom comparator for that column here.
 
-        loadClientData();
+    loadClientData();
 
-        clientPanel.add(toolBar, BorderLayout.NORTH);
-        clientPanel.add(new JScrollPane(clientTable), BorderLayout.CENTER);
+    clientPanel.add(toolBar, BorderLayout.NORTH);
+    clientPanel.add(new JScrollPane(clientTable), BorderLayout.CENTER);
 
-        return clientPanel;
+    return clientPanel;
     }
 
     private void loadClientData(){
@@ -671,6 +674,16 @@ public class AdminGUI {
             }
         };
         contractTable = new JTable(contractModel);
+        contractTable.setAutoCreateRowSorter(true);
+        // Custom comparator for Client (Name (ID)) column (index 1)
+        if (contractTable.getRowSorter() instanceof TableRowSorter) {
+            TableRowSorter<?> sorter = (TableRowSorter<?>) contractTable.getRowSorter();
+            sorter.setComparator(1, (o1, o2) -> {
+                String n1 = o1 != null ? o1.toString().split(" \\(")[0] : "";
+                String n2 = o2 != null ? o2.toString().split(" \\(")[0] : "";
+                return n1.compareToIgnoreCase(n2);
+            });
+        }
 
         loadContractData();
         
@@ -1007,14 +1020,15 @@ public class AdminGUI {
                 return false;
             }
         };
-        serviceTable = new JTable(serviceModel);
+    serviceTable = new JTable(serviceModel);
+    serviceTable.setAutoCreateRowSorter(true);
 
-        loadServiceData();
+    loadServiceData();
 
-        servicePanel.add(toolBar, BorderLayout.NORTH);
-        servicePanel.add(new JScrollPane(serviceTable), BorderLayout.CENTER);
+    servicePanel.add(toolBar, BorderLayout.NORTH);
+    servicePanel.add(new JScrollPane(serviceTable), BorderLayout.CENTER);
 
-        return servicePanel;
+    return servicePanel;
     }
 
     private void loadServiceData(){
@@ -1025,7 +1039,7 @@ public class AdminGUI {
                 service.getServiceId(),
                 service.getName(),
                 service.getDescription(),
-                "₱" + service.getRate(),
+                String.format("₱%,.2f", service.getRate().doubleValue()),
                 service.getAvailability()
             });
         }
@@ -1105,14 +1119,15 @@ public class AdminGUI {
                 return false;
             }
         };
-        branchTable = new JTable(branchModel);
+    branchTable = new JTable(branchModel);
+    branchTable.setAutoCreateRowSorter(true);
 
-        loadBranchData();
+    loadBranchData();
         
-        branchPanel.add(toolBar, BorderLayout.NORTH);
-        branchPanel.add(new JScrollPane(branchTable), BorderLayout.CENTER);
+    branchPanel.add(toolBar, BorderLayout.NORTH);
+    branchPanel.add(new JScrollPane(branchTable), BorderLayout.CENTER);
 
-        return branchPanel;
+    return branchPanel;
     }
 
     private void loadBranchData(){
@@ -1305,14 +1320,16 @@ public class AdminGUI {
                 return false;
             }
         };
-        managerTable = new JTable(managerModel);
+    managerTable = new JTable(managerModel);
+    managerTable.setAutoCreateRowSorter(true);
+    // If you ever display Name (ID) in this table, set a custom comparator for that column here.
 
-        loadManagerData();
+    loadManagerData();
 
-        managerPanel.add(toolBar, BorderLayout.NORTH);
-        managerPanel.add(new JScrollPane(managerTable), BorderLayout.CENTER);
+    managerPanel.add(toolBar, BorderLayout.NORTH);
+    managerPanel.add(new JScrollPane(managerTable), BorderLayout.CENTER);
 
-        return managerPanel;
+    return managerPanel;
     }
 
     private void loadManagerData(){
@@ -1488,36 +1505,48 @@ public class AdminGUI {
         toolBar.addSeparator();
         toolBar.add(refreshButton);
 
-        String[] columns = {"Invoice ID", "Client", "Amount", "Due Date", "Status", "Late Fee"};
+        String[] columns = {"Invoice ID", "Client", "Amount","Late Fee", "Balance","Paid On", "Due Date", "Status"};
         invoiceModel = new DefaultTableModel(columns, 0){
             @Override
             public boolean isCellEditable(int row, int column){
                 return false;
             }
         };
-        invoiceTable = new JTable(invoiceModel);
+    invoiceTable = new JTable(invoiceModel);
+    invoiceTable.setAutoCreateRowSorter(true);
 
-        loadInvoiceData();
+    loadInvoiceData();
 
-        invoicePanel.add(toolBar, BorderLayout.NORTH);
-        invoicePanel.add(new JScrollPane(invoiceTable), BorderLayout.CENTER);
+    invoicePanel.add(toolBar, BorderLayout.NORTH);
+    invoicePanel.add(new JScrollPane(invoiceTable), BorderLayout.CENTER);
 
-        return invoicePanel;
+    return invoicePanel;
     }
 
     private void loadInvoiceData(){
         invoiceModel.setRowCount(0);
         List<Client> clients = clientController.getAllClients();
-        for(Client client : clients){
+        for (Client client : clients) {
             List<Invoice> invoices = invoiceDAO.getInvoicesByClientID(client.getClientId());
-            for(Invoice invoice : invoices){
+            for (Invoice invoice : invoices) {
+                BigDecimal billed = invoice.getAmount() != null ? invoice.getAmount() : BigDecimal.ZERO;
+                BigDecimal late = invoice.getLateFee() != null ? invoice.getLateFee() : BigDecimal.ZERO;
+                BigDecimal totalBilled = billed.add(late);
+
+                BigDecimal totalPaid = paymentDAO.getTotalPaidForInvoice(invoice.getInvoiceId());
+                if (totalPaid == null) totalPaid = BigDecimal.ZERO;
+
+                BigDecimal balance = totalBilled.subtract(totalPaid);
+
                 invoiceModel.addRow(new Object[]{
                     invoice.getInvoiceId(),
                     client.getName(),
-                    "₱" + invoice.getAmount(),
+                    String.format("₱%,.2f", billed.doubleValue()),
+                    String.format("₱%,.2f", late.doubleValue()),
+                    String.format("₱%,.2f", balance.doubleValue()),
+                    invoice.getInvoiceDate(),
                     invoice.getDueDate(),
-                    invoice.getStatus().toString(),
-                    "₱" + invoice.getLateFee()
+                    invoice.getStatus().toString()
                 });
             }
         }
@@ -1569,14 +1598,13 @@ public class AdminGUI {
         report.append("Total Contracts: ").append(totalContracts).append("\n");
         report.append("Active Contracts: ").append(activeContracts).append("\n");
         report.append("Closed Contracts: ").append(closedContracts).append("\n");
-        report.append("Expiring in 30 days: ").append(expiringSoon).append("\n");
+        report.append("Expiring in 30 days: ").append(expiringSoon).append("\n\n");
 
         report.append("CONTRACTS BY STATUS:\n");
         Map<ContractStatus, Integer> contractByStatus = new HashMap<>();
         for (Contract contract: allContracts){
             contractByStatus.merge(contract.getContractStatus(), 1, Integer::sum);
         }
-
         for(Map.Entry<ContractStatus, Integer> entry : contractByStatus.entrySet()){
             report.append("  ").append(entry.getKey()).append(": ").append(entry.getValue()).append("\n");
         }
@@ -1585,23 +1613,30 @@ public class AdminGUI {
         report.append("CONTRACTS BY CLIENT:\n");
         for (Client client : allClients){
             List<Contract> clientContracts = contractDAO.getContractsByClientId(client.getClientId());
-            if(!clientContracts.isEmpty()){
+            if (!clientContracts.isEmpty()){
                 report.append("  ").append(client.getName()).append(": ").append(clientContracts.size()).append(" contracts\n");
             }
         }
         report.append("\n");
 
         if (expiringSoon > 0){
-            report.append("CONCTRACTS EXPIRING SOON:\n");
+            report.append("CONTRACTS EXPIRING SOON:\n");
             for(Contract contract : allContracts){
                 if(contract.getContractStatus() == ContractStatus.ACTIVE && contract.getEndDate().isBefore(LocalDate.now().plusDays(30))){
                     Client client = clientController.getClientByID(contract.getClientID());
-                    long daysLeft = ChronoUnit.DAYS.between(LocalDate.now(), contract.getEndDate());
-                    report.append("  ").append(contract.getContractID()).
-                           append(" - ").append(client != null ? client.getName() : "Uknown Client").
-                           append(" (Expires in ").append(daysLeft).append(" days)\n");
+                    long daysLeft = java.time.temporal.ChronoUnit.DAYS.between(LocalDate.now(), contract.getEndDate());
+                    report.append("  ")
+                          .append(contract.getContractID())
+                          .append(" - ")
+                          .append(client != null ? client.getName() : contract.getClientID())
+                          .append(" - End: ")
+                          .append(contract.getEndDate())
+                          .append(" (Expires in ")
+                          .append(daysLeft)
+                          .append(" days)\n");
                 }
             }
+            report.append("\n");
         }
 
         displayReport("Contract Overview", report.toString());
@@ -1653,50 +1688,178 @@ public class AdminGUI {
     }
 
     private void showProcessPaymentDialog(){
-        JDialog dialog = new JDialog(mainFrame, "Process Payment", true);
-        dialog.setLayout(new GridLayout(5, 2, 5, 5));
-        dialog.setSize(400, 250);
+        JDialog paymentDialog = new JDialog(mainFrame, "Process Payment", true);
+        paymentDialog.setLayout(new GridBagLayout());
+        paymentDialog.setSize(500, 350);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(8, 8, 8, 8);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
 
-        JTextField clientIDField = new JTextField();
-        JTextField invoiceIDField = new JTextField();
+        // Client Selection
+        JLabel clientLabel = new JLabel("Client Name:");
+        clientLabel.setFont(new Font("Arial", Font.BOLD, 12));
+        paymentDialog.add(clientLabel, gbc);
+        
+        gbc.gridx = 1;
+        JComboBox<String> clientCombo = new JComboBox<>();
+        clientCombo.addItem("-- Select Client --");
+        List<Client> activeClients = clientController.getAllActiveClients();
+        for (Client client : activeClients) {
+            clientCombo.addItem(client.getName() + " (" + client.getClientId() + ")");
+        }
+        paymentDialog.add(clientCombo, gbc);
+
+        // Invoice Selection (dynamically populated based on client)
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        JLabel invoiceLabel = new JLabel("Invoice to Pay:");
+        invoiceLabel.setFont(new Font("Arial", Font.BOLD, 12));
+        paymentDialog.add(invoiceLabel, gbc);
+        
+        gbc.gridx = 1;
+        JComboBox<String> invoiceCombo = new JComboBox<>();
+        invoiceCombo.addItem("-- Select Invoice --");
+        paymentDialog.add(invoiceCombo, gbc);
+
+        // Invoice Details Panel
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        gbc.gridwidth = 2;
+        JPanel invoiceDetailsPanel = new JPanel(new GridLayout(0, 2, 5, 5));
+        invoiceDetailsPanel.setBorder(BorderFactory.createTitledBorder("Invoice Details"));
+        invoiceDetailsPanel.setPreferredSize(new Dimension(450, 80));
+        JLabel amountLabel = new JLabel("Invoice Amount:");
+        JLabel amountValue = new JLabel("₱0.00");
+        JLabel dueDateLabel = new JLabel("Due Date:");
+        JLabel dueDateValue = new JLabel("-");
+        JLabel statusLabel = new JLabel("Status:");
+        JLabel statusValue = new JLabel("-");
+        invoiceDetailsPanel.add(amountLabel);
+        invoiceDetailsPanel.add(amountValue);
+        invoiceDetailsPanel.add(dueDateLabel);
+        invoiceDetailsPanel.add(dueDateValue);
+        invoiceDetailsPanel.add(statusLabel);
+        invoiceDetailsPanel.add(statusValue);
+        paymentDialog.add(invoiceDetailsPanel, gbc);
+
+        // Amount to Pay
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        gbc.gridwidth = 1;
+        JLabel amountPayLabel = new JLabel("Amount to Pay:");
+        amountPayLabel.setFont(new Font("Arial", Font.BOLD, 12));
+        paymentDialog.add(amountPayLabel, gbc);
+        
+        gbc.gridx = 1;
         JTextField amountField = new JTextField();
+        paymentDialog.add(amountField, gbc);
 
-        dialog.add(new JLabel("Client ID: "));
-        dialog.add(clientIDField);
-        dialog.add(new JLabel("Invoice ID: "));
-        dialog.add(invoiceIDField);
-        dialog.add(new JLabel("Amount: "));
-        dialog.add(amountField);
+        // Update invoices when client changes
+        clientCombo.addActionListener(e -> {
+            invoiceCombo.removeAllItems();
+            invoiceCombo.addItem("-- Select Invoice --");
+            amountValue.setText("₱0.00");
+            dueDateValue.setText("-");
+            statusValue.setText("-");
+            amountField.setText("");
+            if (clientCombo.getSelectedIndex() > 0) {
+                String selectedClientText = (String) clientCombo.getSelectedItem();
+                String clientId = selectedClientText.split("\\(")[1].replace(")", "");
+                Client selectedClient = clientController.getClientByID(clientId);
+                if (selectedClient != null) {
+                    List<Invoice> invoices = invoiceDAO.getActiveInvoicesForClient(selectedClient.getClientId());
+                    for (Invoice invoice : invoices) {
+                        if (invoice.getStatus() != InvoiceStatus.PAID) {
+                            String invoiceText = String.format("INV-%s | ₱%,.2f | Due: %s | %s", 
+                                invoice.getInvoiceId().substring(4),
+                                invoice.getAmount(),
+                                invoice.getDueDate(),
+                                invoice.getStatus());
+                            invoiceCombo.addItem(invoiceText);
+                        }
+                    }
+                }
+            }
+        });
 
+        // Update invoice details when invoice selection changes
+        invoiceCombo.addActionListener(e -> {
+            if (invoiceCombo.getSelectedIndex() > 0 && clientCombo.getSelectedIndex() > 0) {
+                String invoiceText = (String) invoiceCombo.getSelectedItem();
+                String invoiceId = "INV-" + invoiceText.split(" \\| ")[0].substring(4);
+                Invoice selectedInvoice = invoiceDAO.getInvoiceById(invoiceId);
+                if (selectedInvoice != null) {
+                    amountValue.setText(String.format("₱%,.2f", selectedInvoice.getAmount()));
+                    dueDateValue.setText(selectedInvoice.getDueDate().toString());
+                    statusValue.setText(selectedInvoice.getStatus().toString());
+                    amountField.setText(selectedInvoice.getAmount().toString());
+                }
+            } else {
+                amountValue.setText("₱0.00");
+                dueDateValue.setText("-");
+                statusValue.setText("-");
+                amountField.setText("");
+            }
+        });
+
+        gbc.gridx = 0;
+        gbc.gridy = 4;
+        gbc.gridwidth = 2;
+        JPanel buttonPanel = new JPanel(new FlowLayout());
         JButton processButton = new JButton("Process Payment");
         JButton cancelButton = new JButton("Cancel");
 
         processButton.addActionListener(e -> {
-            try{
-                String clientID = clientIDField.getText();
-                String invoiceID = invoiceIDField.getText();
-                BigDecimal amount = new BigDecimal(amountField.getText());
-
-                boolean success = paymentController.processPayment(clientID, invoiceID, amount);
-
-                if(success){
-                    loadInvoiceData();
-                    dialog.dispose();
-                    JOptionPane.showMessageDialog(mainFrame, "Payment processed successfully!");
-                } else {
-                    JOptionPane.showMessageDialog(dialog, "Payment failed. Please check client and/or invoice information", "Error", JOptionPane.ERROR_MESSAGE);
+            try {
+                if (clientCombo.getSelectedIndex() == 0) {
+                    JOptionPane.showMessageDialog(paymentDialog, "Please select a client.", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
                 }
-            } catch (Exception ex){
-                JOptionPane.showMessageDialog(dialog, "Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                if (invoiceCombo.getSelectedIndex() == 0) {
+                    JOptionPane.showMessageDialog(paymentDialog, "Please select an invoice.", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                String selectedClientText = (String) clientCombo.getSelectedItem();
+                String clientId = selectedClientText.split("\\(")[1].replace(")", "");
+                String invoiceText = (String) invoiceCombo.getSelectedItem();
+                String invoiceId = "INV-" + invoiceText.split(" \\| ")[0].substring(4);
+                if (amountField.getText().trim().isEmpty()) {
+                    JOptionPane.showMessageDialog(paymentDialog, "Please enter payment amount.", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                boolean success = paymentController.processPayment(
+                    clientId, 
+                    invoiceId, 
+                    new BigDecimal(amountField.getText())
+                );
+                if (success) {
+                    loadInvoiceData();
+                    JOptionPane.showMessageDialog(paymentDialog, 
+                        "Payment processed successfully!\n\n" +
+                        "Client: " + clientCombo.getSelectedItem() + "\n" +
+                        "Invoice: " + invoiceId + "\n" +
+                        "Amount: ₱" + amountField.getText(),
+                        "Success", 
+                        JOptionPane.INFORMATION_MESSAGE);
+                    paymentDialog.dispose();
+                } else {
+                    JOptionPane.showMessageDialog(paymentDialog, "Payment failed. Please check the inputs.", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(paymentDialog, "Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         });
 
-        cancelButton.addActionListener(e -> dialog.dispose());
+        cancelButton.addActionListener(e -> paymentDialog.dispose());
 
-        dialog.add(processButton);
-        dialog.add(cancelButton);
-        dialog.setLocationRelativeTo(mainFrame);
-        dialog.setVisible(true);
+        buttonPanel.add(processButton);
+        buttonPanel.add(cancelButton);
+        paymentDialog.add(buttonPanel, gbc);
+
+        paymentDialog.setLocationRelativeTo(mainFrame);
+        paymentDialog.setVisible(true);
     }
 
     private void viewInvoiceDetails(){
@@ -1717,9 +1880,32 @@ public class AdminGUI {
                 details.append("Due Date: ").append(invoice.getDueDate()).append("\n");
                 details.append("Status: ").append(invoice.getStatus()).append("\n");
                 details.append("=== BREAKDOWN ===\n\n");
+                // List services included in the contract with their prices
+                List<ContractService> contractServices = contractServiceDAO.getContractServicesByContractId(invoice.getContractId());
+                if (contractServices != null && !contractServices.isEmpty()) {
+                    details.append("Services:\n");
+                    for (ContractService cs : contractServices) {
+                        Service svc = serviceDAO.getServiceById(cs.getServiceID());
+                        if (svc != null) {
+                            details.append("  - ")
+                                   .append(svc.getName())
+                                   .append(": ")
+                                   .append(String.format("₱%,.2f", svc.getRate().doubleValue()))
+                                   .append("\n");
+                        } else {
+                            details.append("  - Unknown service (ID: ").append(cs.getServiceID()).append(")\n");
+                        }
+                    }
+                    details.append("\n");
+                }
                 details.append("Amount: ₱").append(invoice.getAmount()).append("\n");
                 details.append("Late Fee: ₱").append(invoice.getLateFee()).append("\n");
                 details.append("Total Amount: ₱").append(invoice.getAmount().add(invoice.getLateFee())).append("\n");
+                BigDecimal paidSoFar = paymentDAO.getTotalPaidForInvoice(invoice.getInvoiceId());
+                if (paidSoFar == null) paidSoFar = BigDecimal.ZERO;
+                BigDecimal balance = invoice.getAmount().add(invoice.getLateFee()).subtract(paidSoFar);
+                details.append("Paid: ₱").append(paidSoFar).append("\n");
+                details.append("Balance: ₱").append(balance).append("\n");
 
 
                 if(invoice.getStatus() == InvoiceStatus.OVERDUE){
