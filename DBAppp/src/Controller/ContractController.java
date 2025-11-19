@@ -3,9 +3,11 @@ package Controller;
 import Model.Entities.*;
 import Model.DAO.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+
 
 public class ContractController {
     private final ContractDAO contractDAO;
@@ -102,6 +104,59 @@ public class ContractController {
         invoiceDAO.addInvoice(invoice);
 
         return true;
+    }
+
+    public boolean createContractAndInvoice(String clientName, List<String> serviceIds, String managerId) {
+        Client client = clientDAO.getClientByName(clientName);
+        if (client == null) {
+            return false;
+        }
+
+        List<Service> selectedServices = new ArrayList<>();
+        BigDecimal totalAmount = BigDecimal.ZERO;
+        
+        for (String serviceId : serviceIds){
+            Service service = serviceDAO.getServiceById(serviceId);
+            if (service == null) {
+                return false;
+            }
+            if (!"Available".equals(service.getAvailability())){
+                return false;
+            }
+
+            selectedServices.add(service);
+            totalAmount = totalAmount.add(service.getRate());
+        }
+
+        AccountManager manager = accountManagerDAO.getManagerByID(managerId);
+        if (manager == null) {
+            return false;
+        }
+
+        LocalDate startDate = LocalDate.now();
+        LocalDate endDate = startDate.plusYears(1);
+        LocalDate invoiceDue = startDate.plusDays(30);
+
+        Contract contract = new Contract(
+                client.getClientId(),
+                managerId,
+                startDate,
+                endDate
+        );
+
+        try{
+            contractDAO.addContract(contract);
+            for(String serviceId : serviceIds){
+                ContractService contractService = new ContractService(serviceId, contract.getContractID());
+                contractServiceDAO.addContractService(contractService);
+            }
+            Invoice invoice = new Invoice(contract.getContractID(), startDate, invoiceDue, totalAmount);
+            invoiceDAO.addInvoice(invoice);
+
+            return true;
+        } catch (Exception e){
+            return false;
+        }
     }
 
 }

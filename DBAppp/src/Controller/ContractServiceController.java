@@ -1,10 +1,12 @@
 package Controller;
 import Model.DAO.*;
 import Model.Entities.*;
-import View.InputHelper;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+
+import javax.swing.JOptionPane;
 
 public class ContractServiceController {
     private final ContractServiceDao contractServiceDao;
@@ -22,87 +24,51 @@ public class ContractServiceController {
         this.invoiceDAO = invoiceDAO;
     }
 
-    private void showAllInactive(){
-        List<ContractService> inactiveCS = contractServiceDao.getAllInactiveContractServices();
-        for(ContractService cs: inactiveCS){
-            System.out.println(cs.toString());
-        }
-    }
-
-    public ContractRenewalResult renewContract(String clientId) {
+    public ContractRenewalResult renewContract(String clientId, String contractId) {
         Client client = clientDAO.getClientByID(clientId);
         if (client == null) {
-            System.out.println("Client not found.");
+            JOptionPane.showMessageDialog(null, "Client not found.");
             return null;
         }
 
-        // Show closed contracts for that client
-        showAllInactive();
-
-        String contractId = InputHelper.getStringInput("Enter the Contract Service ID of the contract you would like to renew: ");
-        ContractService cs = contractServiceDao.getContractServiceById(contractId);
-        if (cs == null) {
-            System.out.println("Error: ContractService not found for contractId " + contractId);
-            return null;
-        }
-        Contract contract = contractServiceDao.getContractByContractServiceId(contractId);
-        Service service = serviceDAO.getServiceById(cs.getServiceID());
-
-
+        Contract contract = contractDAO.getContractByID(contractId);
         if (contract == null) {
-            System.out.println("Contract not found for this client.");
+            JOptionPane.showMessageDialog(null, "Contract not found: " + contractId);
             return null;
         }
 
-        // Store old details
-        LocalDate oldStart = contract.getStartDate();
-        LocalDate oldEnd = contract.getEndDate();
-        ContractStatus oldStatus = ContractStatus.CLOSED;
-
-        // Update the contract
-        contract.setStartDate(LocalDate.now());
-        contract.setEndDate(LocalDate.now().plusYears(1));
-        contract.setContractStatus(ContractStatus.ACTIVE);
-        contractDAO.updateContractDetails(contract);
-        Invoice invoice = new Invoice(contract.getContractID(), LocalDate.now(), LocalDate.now().plusYears(1), service.getRate());
-
-        // Update linked services
-        contractServiceDao.reactivateContractServices(contractId);
-        invoiceDAO.addInvoice(invoice);
-
-        // Return a result object containing both old & new data for display
-        return new ContractRenewalResult(oldStart, oldEnd, oldStatus, contract.getStartDate(), contract.getEndDate(), contract.getContractStatus());
-    }
-
-    public ContractRenewalResult renewContract(String clientID, String contractServiceId){
-        Client client = clientDAO.getClientByID(clientID);
-        if (client == null) {
-            return null;
-        }
-
-        ContractService cs = contractServiceDao.getContractServiceById(contractServiceId);
-        if (cs == null) {
+        if (!contract.getClientID().equals(clientId)) {
+            JOptionPane.showMessageDialog(null, "Contract does not belong to this client.");
             return null;
         }
         
-        Contract contract = contractServiceDao.getContractByContractServiceId(contractServiceId);
-        Service service = serviceDAO.getServiceById(cs.getServiceID());
-
-        if (contract == null) {
+        if (contract.getContractStatus() != ContractStatus.CLOSED) {
+            JOptionPane.showMessageDialog(null, "Only closed contracts can be renewed.");
             return null;
         }
 
         LocalDate oldStart = contract.getStartDate();
         LocalDate oldEnd = contract.getEndDate();
-        ContractStatus oldStatus = ContractStatus.CLOSED;
+        ContractStatus oldStatus = contract.getContractStatus();
 
         contract.setStartDate(LocalDate.now());
         contract.setEndDate(LocalDate.now().plusYears(1));
         contract.setContractStatus(ContractStatus.ACTIVE);
         contractDAO.updateContractDetails(contract);
-        Invoice invoice = new Invoice(contract.getContractID(), LocalDate.now(), LocalDate.now().plusYears(1), service.getRate());
-
-        contractServiceDao.reactivateContractServices(contractServiceId);
+        
+        contractServiceDao.reactivateContractServices(contractId);
+        
+        List<ContractService> contractServices = contractServiceDao.getContractServicesByContractId(contractId);
+        BigDecimal totalAmount = BigDecimal.ZERO;
+        
+        for (ContractService cs : contractServices) {
+            Service service = serviceDAO.getServiceById(cs.getServiceID());
+            if (service != null) {
+                totalAmount = totalAmount.add(service.getRate());
+            }
+        }
+        
+        Invoice invoice = new Invoice(contract.getContractID(), LocalDate.now(), LocalDate.now().plusYears(1), totalAmount);
         invoiceDAO.addInvoice(invoice);
 
         return new ContractRenewalResult(oldStart, oldEnd, oldStatus, contract.getStartDate(), contract.getEndDate(), contract.getContractStatus());

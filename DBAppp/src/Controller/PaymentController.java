@@ -12,15 +12,13 @@ public class PaymentController {
     private ClientDAO clientDAO;
     private InvoiceDAO invoiceDAO;
     private ContractDAO contractDAO;
-    private ContractServiceDao contractServiceDAO;
     private PaymentDAO paymentDAO;
 
-    public PaymentController(PaymentDAO paymentDAO, ClientDAO clientDAO, InvoiceDAO invoiceDAO, ContractDAO contractDAO, ContractServiceDao contractServiceDAO){
+    public PaymentController(PaymentDAO paymentDAO, ClientDAO clientDAO, InvoiceDAO invoiceDAO, ContractDAO contractDAO){
         this.paymentDAO = paymentDAO;
         this.clientDAO = clientDAO;
         this.invoiceDAO = invoiceDAO;
         this.contractDAO = contractDAO;
-        this.contractServiceDAO = contractServiceDAO;
     }
 
     public boolean processPayment(String clientId, String invoiceId, BigDecimal paidAmount) {
@@ -49,11 +47,9 @@ public class PaymentController {
         // Update related entities
         invoiceDAO.markPaid(invoiceId);
         Contract contract = invoiceDAO.getContractByInvoiceId(invoiceId);
-        ContractService cs = contractServiceDAO.getContractServiceByContractId(contract.getContractID());
 
         if (contract != null) {
             contractDAO.closeContract(contract.getContractID());  // Soft delete or mark closed
-            contractServiceDAO.deactivateContractServices(cs.getContractServiceID());
         }
 
         System.out.println("Payment Reference: " + payment.getReceiptNumber());

@@ -34,6 +34,11 @@ public class ManagerController {
         return managerDAO.getManagerByID(id);
     }
 
+        public AccountManager getManagerByName(String name) {
+        return managerDAO.getManagerByName(name);
+    }
+
+
     // Update an existing manager
     public void updateExistingManager(AccountManager manager){
         managerDAO.updateManagers(manager);

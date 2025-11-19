@@ -42,6 +42,10 @@ public class ServiceController {
         return serviceDAO.getAvailableServicesOnly();
     }
 
+    public Service getServiceByName(String name){
+        return serviceDAO.getServiceByName(name);
+    }
+
     public Map<String, List<?>> getRelatedRecords(String serviceId) {
         Map<String, List<?>> records = new HashMap<>();
         List<Contract> contracts = contractServiceDao.getContractsByServiceID(serviceId);
