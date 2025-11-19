@@ -1,5 +1,21 @@
 package View;
 
+// UNCOMMENT TO USE TERMINAL AND COMMENT OUT EVERYTHING STARTING FROM "import GUI.CLIENTGUI;"
+/*
+import java.util.Scanner;
+import View.App;
+
+//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
+// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
+public class Main {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        App app = new App(scanner);
+        app.mainApp();
+    }
+}
+*/
+
 import GUI.ClientGUI;
 import GUI.AdminGUI;
 
@@ -22,15 +38,9 @@ import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
-// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
 public class Main {
     private static final String ADMIN_PASSWORD = "Admin"; //Change if needed
     public static void main(String[] args) {
-        // Scanner scanner = new Scanner(System.in);
-        // App app = new App(scanner);
-        // app.mainApp();
-
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception e){
