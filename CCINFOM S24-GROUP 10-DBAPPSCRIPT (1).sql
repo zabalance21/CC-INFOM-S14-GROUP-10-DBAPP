@@ -129,7 +129,7 @@ INSERT INTO AccountManager (managerId, name, contactInfo, branchId, employment_s
 ('AM-004','Rico Santos','rico.santos@example.com','BR-004','Active'),
 ('AM-005','Mara Gomez','mara.gomez@example.com','BR-005','Active'),
 ('AM-006','Daniel Cruz','dan.cruz@example.com','BR-006','Active'),
-('AM-007','Fiona Lim','fiona.lim@example.com','BR-007','Active'),
+('AM-007','Fiona Lim','fiona.lim@example.com','BR-007','Resigned'),
 ('AM-008','George Yu','george.yu@example.com','BR-008','Active'),
 ('AM-009','Paula Reyes','paula.reyes@example.com','BR-009','Active'),
 ('AM-010','Chris Tan','chris.tan@example.com','BR-010','Active');
@@ -156,7 +156,7 @@ INSERT INTO Client (clientId, name, email, phone, address, status) VALUES
 ('CL-007','Julia Tan','julia.tan@example.com','09170007777','707 Sunset Blvd','Active'),
 ('CL-008','Nathan Torres','nathan.t@example.com','09170008888','808 Emerald Lane','Active'),
 ('CL-009','Bea Santos','bea.santos@example.com','09170009999','909 Silver St','Active'),
-('CL-010','Derek Miller','dmiller@example.com','09171234568','010 Gold Ave','Active');
+('CL-010','Derek Miller','dmiller@example.com','09171234568','010 Gold Ave','Inactive');
 
 INSERT INTO Contract (contractId, clientId, managerId, startDate, endDate, contract_status) VALUES
 ('CT-001','CL-001','AM-001','2026-01-10','2027-01-10','Active'),
@@ -167,7 +167,7 @@ INSERT INTO Contract (contractId, clientId, managerId, startDate, endDate, contr
 ('CT-006','CL-007','AM-006','2026-06-01','2027-06-01','Active'),
 ('CT-007','CL-008','AM-008','2026-07-20','2027-07-20','Active'),
 ('CT-008','CL-009','AM-009','2026-08-15','2027-08-15','Active'),
-('CT-009','CL-010','AM-009','2026-09-10','2027-09-10','Active'),
+('CT-009','CL-002','AM-009','2026-09-10','2027-09-10','Active'),
 ('CT-010','CL-001','AM-001','2026-10-01','2027-10-01','Active');
 
 INSERT INTO ContractService (csId, contractId, serviceId, status) VALUES
