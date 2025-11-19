@@ -156,7 +156,6 @@ public class Main {
         SwingUtilities.invokeLater(() -> {
             try {
                ClientGUI clientGUI = new ClientGUI();
-
                clientGUI.getFrame().addWindowListener(new WindowAdapter() {
                     @Override
                     public void windowClosed(WindowEvent e){
