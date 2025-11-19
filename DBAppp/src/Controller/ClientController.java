@@ -92,11 +92,17 @@ public class ClientController {
     }
 
     public Client getClientByInvoice(Invoice invoice){
+        // Defensive: if invoice or its id is null, we can't find a client
+        if (invoice == null || invoice.getInvoiceId() == null) return null;
+
         List<Client> clients = getAllClients();
-        for(Client client : clients){
+        for (Client client : clients) {
             List<Invoice> clientInvoices = invoiceDAO.getInvoicesByClientID(client.getClientId());
-            if(clientInvoices.contains(invoice)){
-                return client;
+            if (clientInvoices == null) continue;
+            for (Invoice inv : clientInvoices) {
+                if (inv != null && invoice.getInvoiceId().equals(inv.getInvoiceId())) {
+                    return client;
+                }
             }
         }
         return null;

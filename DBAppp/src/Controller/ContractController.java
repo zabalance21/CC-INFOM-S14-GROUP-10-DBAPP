@@ -59,6 +59,7 @@ public class ContractController {
         return allContracts;
 
     }
+
     // Prints all Closed Contracts
     public void showAllClosedContracts(String clientid){
         List<Contract> contracts = contractDAO.getContractsByClientId(clientid);
@@ -150,9 +151,10 @@ public class ContractController {
                 ContractService contractService = new ContractService(serviceId, contract.getContractID());
                 contractServiceDAO.addContractService(contractService);
             }
+
             Invoice invoice = new Invoice(contract.getContractID(), startDate, invoiceDue, totalAmount);
             invoiceDAO.addInvoice(invoice);
-
+            
             return true;
         } catch (Exception e){
             return false;

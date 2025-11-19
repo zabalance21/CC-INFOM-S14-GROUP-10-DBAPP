@@ -55,9 +55,9 @@ public class ContractServiceController {
         contract.setEndDate(LocalDate.now().plusYears(1));
         contract.setContractStatus(ContractStatus.ACTIVE);
         contractDAO.updateContractDetails(contract);
-        
+
         contractServiceDao.reactivateContractServices(contractId);
-        
+
         List<ContractService> contractServices = contractServiceDao.getContractServicesByContractId(contractId);
         BigDecimal totalAmount = BigDecimal.ZERO;
         
@@ -67,7 +67,7 @@ public class ContractServiceController {
                 totalAmount = totalAmount.add(service.getRate());
             }
         }
-        
+
         Invoice invoice = new Invoice(contract.getContractID(), LocalDate.now(), LocalDate.now().plusYears(1), totalAmount);
         invoiceDAO.addInvoice(invoice);
 
