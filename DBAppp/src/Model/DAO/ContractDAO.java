@@ -51,7 +51,7 @@ public class ContractDAO {
                         rs.getDate("startDate").toLocalDate(),
                         rs.getDate("endDate").toLocalDate()
                 );
-                ContractStatus.valueOf(rs.getString("contract_status").toUpperCase());
+                contract.setContractStatus(ContractStatus.valueOf(rs.getString("contract_status").toUpperCase()));
             }
 
         } catch (SQLException e) {
@@ -91,6 +91,37 @@ public class ContractDAO {
             e.printStackTrace();
         }
         return contracts;
+    }
+
+    public String getNextAvailableContractId() {
+        String sql = "SELECT MAX(contractId) FROM Contract WHERE contractId LIKE 'CT-%'";
+        
+        try (Connection conn = DBConnection.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            ResultSet rs = stmt.executeQuery()) {
+            
+            if (rs.next()) {
+                String maxId = rs.getString(1);
+                if (maxId != null) {
+                    // Extract number from "CT-003" 
+                    int lastNumber = Integer.parseInt(maxId.substring(3));
+                    int nextNumber = lastNumber + 1;
+                    
+                    // CHECK MAX LIMIT
+                    if (nextNumber > 1000) {
+                        throw new IllegalStateException("Maximum contract limit reached (999 contracts). Cannot create new contract.");
+                    }
+                    
+                    return String.format("CT-%03d", nextNumber);
+                }
+            }
+            // No contracts exist yet, start from CT-001
+            return "CT-001";
+            
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     // SOFT DELETE - Mark contract as Closed

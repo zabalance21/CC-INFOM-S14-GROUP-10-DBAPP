@@ -53,18 +53,18 @@ public class ContractServiceDao {
 
     }
 
-    public void reactivateContractServices(String csId) {
+    public void reactivateContractServices(String contractId) {
         String sql = "UPDATE ContractService SET status = 'Active' WHERE contractId = ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setString(1, csId);
+            stmt.setString(1, contractId);
             int rowsUpdated = stmt.executeUpdate();
 
             if (rowsUpdated > 0) {
-                System.out.println("All ContractService records for " + csId + " marked as ACTIVE.");
+                System.out.println("All ContractService records for " + contractId + " marked as ACTIVE.");
             } else {
-                System.out.println("No ContractService records found for contract ID: " + csId);
+                System.out.println("No ContractService records found for contract ID: " + contractId);
             }
 
         } catch (SQLException e) {
@@ -240,6 +240,57 @@ public class ContractServiceDao {
             e.printStackTrace();
         }
         return invoices;
+    }
+
+    public List<String> getAllServiceIDs(){
+        List<String> serviceIDs = new ArrayList<>();
+        String sql = "SELECT serviceId FROM ContractService";
+
+        try(Connection conn = DBConnection.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            ResultSet rs = stmt.executeQuery()){
+            
+            while (rs.next()){
+                String serviceId = rs.getString("serviceId");
+                serviceIDs.add(serviceId);
+            }
+
+        } catch (SQLException e){
+                e.printStackTrace();
+        }
+
+        return serviceIDs;
+    }
+
+    public String getNextAvailableContractServiceId() {
+        String sql = "SELECT MAX(csId) FROM ContractService WHERE csId LIKE 'CS-%'";
+        
+        try (Connection conn = DBConnection.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            ResultSet rs = stmt.executeQuery()) {
+            
+            if (rs.next()) {
+                String maxId = rs.getString(1);
+                if (maxId != null) {
+                    // Extract number from "CS-003" 
+                    int lastNumber = Integer.parseInt(maxId.substring(3));
+                    int nextNumber = lastNumber + 1;
+                    
+                    // CHECK MAX LIMIT
+                    if (nextNumber > 1000) {
+                        throw new IllegalStateException("Maximum contract service limit reached (999 contracts services). Cannot create new contract service.");
+                    }
+                    
+                    return String.format("CS-%03d", nextNumber);
+                }
+            }
+            // No contract service exist yet, start from CS-001
+            return "CS-001";
+            
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
 }

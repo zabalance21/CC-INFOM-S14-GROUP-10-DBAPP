@@ -271,4 +271,35 @@ public class AccountManagerDAO {
 
         return 0;
     }
+
+    public String getNextAvailableManagerId() {
+        String sql = "SELECT MAX(managerId) FROM AccountManager WHERE managerId LIKE 'AM-%'";
+        
+        try (Connection conn = DBConnection.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            ResultSet rs = stmt.executeQuery()) {
+            
+            if (rs.next()) {
+                String maxId = rs.getString(1);
+                if (maxId != null) {
+                    // Extract number from "AM-003" 
+                    int lastNumber = Integer.parseInt(maxId.substring(3));
+                    int nextNumber = lastNumber + 1;
+                    
+                    // CHECK MAX LIMIT
+                    if (nextNumber > 1000) {
+                        throw new IllegalStateException("Maximum managers limit reached (999 branches). Cannot create new manager.");
+                    }
+                    
+                    return String.format("AM-%03d", nextNumber);
+                }
+            }
+            // No contracts exist yet, start from Cl-001
+            return "AM-001";
+            
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 }

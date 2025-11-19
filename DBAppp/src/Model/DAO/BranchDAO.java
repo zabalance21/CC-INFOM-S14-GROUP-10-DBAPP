@@ -190,4 +190,35 @@ public class BranchDAO {
 
         return 0;
     }
+
+    public String getNextAvailableBranchId() {
+        String sql = "SELECT MAX(branchId) FROM Branch WHERE branchId LIKE 'BR-%'";
+        
+        try (Connection conn = DBConnection.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            ResultSet rs = stmt.executeQuery()) {
+            
+            if (rs.next()) {
+                String maxId = rs.getString(1);
+                if (maxId != null) {
+                    // Extract number from "BR-003" 
+                    int lastNumber = Integer.parseInt(maxId.substring(3));
+                    int nextNumber = lastNumber + 1;
+                    
+                    // CHECK MAX LIMIT
+                    if (nextNumber > 1000) {
+                        throw new IllegalStateException("Maximum branch limit reached (999 branches). Cannot create new branch.");
+                    }
+                    
+                    return String.format("BR-%03d", nextNumber);
+                }
+            }
+            // No contracts exist yet, start from Cl-001
+            return "BR-001";
+            
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 }

@@ -161,7 +161,7 @@ public class PaymentDAO {
                         rs.getString("invoiceId"),
                         rs.getDate("paymentDate").toLocalDate(),
                         rs.getBigDecimal("amount"),
-                        rs.getString("referencedNumber")
+                        rs.getString("referenceNumber")
                     );
                     payments.add(payment);
                 }
@@ -209,5 +209,36 @@ public class PaymentDAO {
             e.printStackTrace();
         }
         return BigDecimal.ZERO;
+    }
+
+        public String getNextAvailablepaymentId() {
+        String sql = "SELECT MAX(paymentId) FROM Payment WHERE paymentId LIKE 'PM-%'";
+        
+        try (Connection conn = DBConnection.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            ResultSet rs = stmt.executeQuery()) {
+            
+            if (rs.next()) {
+                String maxId = rs.getString(1);
+                if (maxId != null) {
+                    // Extract number from "PM-003" 
+                    int lastNumber = Integer.parseInt(maxId.substring(3));
+                    int nextNumber = lastNumber + 1;
+                    
+                    //CHECK MAX LIMIT
+                    if (nextNumber > 1000) {
+                        throw new IllegalStateException("Maximum payment limit reached (999 contracts services). Cannot proceed with payment");
+                    }
+                    
+                    return String.format("PM-%03d", nextNumber);
+                }
+            }
+            // No contract service exist yet, start from PM-001
+            return "PM-001";
+            
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 }

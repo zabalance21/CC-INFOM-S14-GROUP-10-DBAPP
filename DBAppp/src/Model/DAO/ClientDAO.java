@@ -328,4 +328,36 @@ public class ClientDAO {  // FOR SQL CLIENT TABLE QUERIES
 
         return 0;
     }
+
+    public String getNextAvailableClientId() {
+        String sql = "SELECT MAX(clientId) FROM Client WHERE clientId LIKE 'CL-%'";
+        
+        try (Connection conn = DBConnection.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            ResultSet rs = stmt.executeQuery()) {
+            
+            if (rs.next()) {
+                String maxId = rs.getString(1);
+                if (maxId != null) {
+                    // Extract number from "CL-003" 
+                    int lastNumber = Integer.parseInt(maxId.substring(3));
+                    int nextNumber = lastNumber + 1;
+                    
+                    // CHECK MAX LIMIT
+                    if (nextNumber > 1000) {
+                        throw new IllegalStateException("Maximum clients limit reached (999 client). Cannot create new client.");
+                    }
+                    
+                    return String.format("CL-%03d", nextNumber);
+                }
+            }
+            // No contracts exist yet, start from Cl-001
+            return "CL-001";
+            
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
 }
