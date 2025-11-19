@@ -59,8 +59,6 @@ public class Contract {
         return this.managerID;
     }
 
-
-
     public LocalDate getStartDate() {
         return this.startDate;
     }

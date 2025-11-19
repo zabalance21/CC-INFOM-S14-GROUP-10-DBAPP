@@ -21,6 +21,13 @@ public class ContractService {
         this.contractID = contractID;
     }
 
+    public ContractService(String contractServiceID, String serviceID, String contractID, ClientStatus status) {
+        this.contractServiceID = contractServiceID;
+        this.serviceID = serviceID;
+        this.contractID = contractID;
+        this.status = status;
+    }
+
     public void setContractID(){
         if(counter > MAX_CS){
             throw new IllegalStateException("All possible contract service IDs have been used.");
