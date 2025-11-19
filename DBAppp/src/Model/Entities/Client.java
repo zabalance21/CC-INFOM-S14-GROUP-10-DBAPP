@@ -1,5 +1,6 @@
 package Model.Entities;
 
+import Model.DAO.ClientDAO;
 
 public class Client {
     private String clientId;
@@ -8,8 +9,6 @@ public class Client {
     private String phone;
     private String address;
     private ClientStatus status;
-    private static int counter = 3;
-    private static final int MAX_CLIENTS = 1000;
 
     public Client(String name, String email, String phone, String address) {
         setClientId();
@@ -31,11 +30,12 @@ public class Client {
     }
 
     public void setClientId() {
-        if(counter > MAX_CLIENTS){
-            throw new IllegalStateException("All possible client IDs have been used.");
+        ClientDAO clientDAO = new ClientDAO();
+        this.clientId = clientDAO.getNextAvailableClientId();
+
+        if(this.clientId == null){
+            throw new IllegalStateException("Failed to generate client ID.");
         }
-        this.clientId = String.format("CL-%03d", counter);
-        counter++;
     }
 
     public void setEmail(String email) {

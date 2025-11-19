@@ -1,5 +1,7 @@
 package Model.Entities;
 
+import Model.DAO.BranchDAO;
+
 public class Branch {
     private String branchID;
     private String name;
@@ -7,8 +9,7 @@ public class Branch {
     private String city;
     private String contactNumber;
     private BranchStatus status;
-    private static int counter = 3;
-    private static final int MAX_BRANCHES = 1000;
+
 
     public Branch(String name, String address, String city, String contactNumber){
         setbranchID();
@@ -29,13 +30,14 @@ public class Branch {
         this.status = BranchStatus.OPERATIONAL;
     }
     public void setbranchID() {
-        if(counter > MAX_BRANCHES) {
-            throw new IllegalStateException("All possible branch IDs have been used.");
-        }
-        this.branchID = String.format("BR-%03d", counter);;
-        counter = counter + 1;
+        BranchDAO branchDAO = new BranchDAO();
+        this.branchID = branchDAO.getNextAvailableBranchId();
 
+        if(this.branchID == null){
+            throw new IllegalStateException("Failed to generate branch ID.");
+        }
     }
+
     public void setName(String name) {
         if (name == null || name.trim().isEmpty()) {
             throw new IllegalArgumentException("Invalid string format. String cannot be null or empty.");

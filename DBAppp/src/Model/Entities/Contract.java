@@ -2,6 +2,8 @@ package Model.Entities;
 
 import java.time.LocalDate;
 
+import Model.DAO.ContractDAO;
+
 public class Contract {
     private String contractID;
     private String clientID;
@@ -9,8 +11,6 @@ public class Contract {
     private LocalDate startDate;
     private LocalDate endDate;
     private ContractStatus contractStatus;
-    private static int counter = 3;
-    private static final int MAX_CONTRACTS = 1000;
 
     public Contract(String clientID, String managerID, LocalDate startDate, LocalDate endDate) {
         setContractID();
@@ -31,12 +31,14 @@ public class Contract {
     }
 
     public void setContractID(){
-        if(counter > MAX_CONTRACTS){
-            throw new IllegalStateException("All possible contract IDs have been used.");
+        ContractDAO contractDAO = new ContractDAO();
+        this.contractID = contractDAO.getNextAvailableContractId();
+
+        if(this.contractID == null){
+            throw new IllegalStateException("Failed to generate contract ID.");
         }
-        this.contractID = String.format("CT-%03d", counter);
-        counter++;
     }
+
     public void setContractStatus(ContractStatus contractStatus){
         this.contractStatus = contractStatus;
     }

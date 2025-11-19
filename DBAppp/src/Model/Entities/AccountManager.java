@@ -1,13 +1,14 @@
 package Model.Entities;
 
+import Model.DAO.AccountManagerDAO;
+
 public class AccountManager {
     private String managerID;
     private String name;
     private String contactInfo;
     private String branchID;
     private ManagerStatus status;
-    private static int counter = 3;
-    private static final int MAX_MANAGERS = 1000;
+
 
     public AccountManager(String name, String contactInfo, String branchID) {
         setManagerID();
@@ -25,11 +26,12 @@ public class AccountManager {
     }
 
     public void setManagerID() {
-        if(counter > MAX_MANAGERS) {
-            throw new IllegalStateException("All possible manager IDs have been used.");
+        AccountManagerDAO accountManagerDAO = new AccountManagerDAO();
+        this.managerID = accountManagerDAO.getNextAvailableManagerId();
+
+        if(this.managerID == null){
+            throw new IllegalStateException("Failed to generate manager ID.");
         }
-        this.managerID = String.format("AM-%03d", counter);;
-        counter = counter + 1;
     }
 
     public void setName(String name){

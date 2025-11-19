@@ -3,13 +3,14 @@ package Model.Entities;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+import Model.DAO.PaymentDAO;
+
 public class Payment {
     private String paymentId;
     private String invoiceId;
     private LocalDate paymentDate;
     private BigDecimal amount;
     private String receiptNumber;
-    private static int paymentIdCounter = 3;
     private static int receptIdCounter = 2;
     private static int MAX_RECIEPTS = 1000;
 
@@ -31,11 +32,12 @@ public class Payment {
     }
 
     private void setPaymentId(){
-        if(paymentIdCounter > MAX_RECIEPTS){
-            throw new IllegalStateException("All possible payment IDs have been used.");
+        PaymentDAO paymentDAO = new PaymentDAO();
+        this.paymentId = paymentDAO.getNextAvailablepaymentId();
+
+        if(this.paymentId == null){
+            throw new IllegalStateException("Failed to generate payment ID.");
         }
-        this.paymentId = String.format("PM-%03d", paymentIdCounter);
-        paymentIdCounter++;
     }
 
     private void setReceiptNumber(){
